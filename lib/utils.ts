@@ -48,3 +48,7 @@ export function joinUrl(baseUrl: string, ...paths: string[]): string {
   // Join base with paths
   return cleanPaths.length > 0 ? `${base}/${cleanPaths.join("/")}` : base;
 }
+
+export const hasEnvVars =
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
