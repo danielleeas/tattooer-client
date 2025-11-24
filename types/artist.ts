@@ -3,7 +3,7 @@
  */
 export interface Artist {
   id: string;
-  username: string;
+  full_name: string;
   booking_link: string;
   // Lägg till fler fält baserat på vad RPC-funktionen returnerar
   [key: string]: unknown;

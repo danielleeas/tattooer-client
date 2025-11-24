@@ -36,7 +36,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
             <h1>Artist Page</h1>
             {artist ? (
                 <>
-                    <h2>{artist.username || "Unknown Artist"}</h2>
+                    <h2>{artist.full_name || "Unknown Artist"}</h2>
                     <p>Artist ID: {artist.id || id}</p>
                     <p>Booking Link: {artist.booking_link || bookingLink}</p>
                     {/* Lägg till fler fält baserat på vad artist-objektet innehåller */}
