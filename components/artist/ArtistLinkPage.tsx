@@ -1,4 +1,3 @@
-import { ClipboardList, Video, Image, Images, HelpCircle } from "lucide-react";
 import { ArtistProfileHeader } from "./ArtistProfileHeader";
 import { ArtistProfileImage } from "./ArtistProfileImage";
 import { ActionLinkButton } from "./ActionLinkButton";

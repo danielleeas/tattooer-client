@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
+
 type Artist = Database["public"]["Tables"]["artists"]["Row"];
+type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 
 /**
  * Hämtar artistdata via booking link från Supabase RPC-funktion
@@ -59,7 +61,10 @@ export async function getArtistByBookingLink(
 
 export async function getArtistById(id: string): Promise<Artist | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("artists").select("*").eq("id", id);
+  const { data, error } = await supabase
+    .from("artists")
+    .select("*")
+    .eq("id", id);
 
   console.log("data", data);
 
@@ -70,3 +75,20 @@ export async function getArtistById(id: string): Promise<Artist | null> {
   return data[0] as Artist;
 }
 
+export async function getArtistPortfolios(
+  artistId: string
+): Promise<Portfolio[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("artist_portfolios")
+    .select("*")
+    .eq("artist_id", artistId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(`Failed to fetch portfolios: ${error.message}`);
+  }
+
+  return data || [];
+}
