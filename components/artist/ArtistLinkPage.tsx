@@ -55,7 +55,7 @@ export function ArtistLinkPage({ artist, className }: ArtistLinkPageProps) {
       {/* Action Buttons */}
       <div className="flex justify-between items-center w-full">
         <ActionLinkButton
-          href={`${basePath}/flash`}
+          href={`${basePath}/flashes`}
           icon="flash"
           label="VIEW FLASH"
         />

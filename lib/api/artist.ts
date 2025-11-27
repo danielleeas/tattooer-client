@@ -3,6 +3,7 @@ import type { Database } from "@/types/supabase";
 
 type Artist = Database["public"]["Tables"]["artists"]["Row"];
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
+type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 
 /**
  * Hämtar artistdata via booking link från Supabase RPC-funktion
@@ -88,6 +89,22 @@ export async function getArtistPortfolios(
   if (error) {
     console.error("Supabase error:", error);
     throw new Error(`Failed to fetch portfolios: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+export async function getArtistFlashes(artistId: string): Promise<Flash[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("artist_flashs")
+    .select("*")
+    .eq("artist_id", artistId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(`Failed to fetch flashes: ${error.message}`);
   }
 
   return data || [];
