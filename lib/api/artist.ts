@@ -6,6 +6,7 @@ type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 type FAQCategory = Database["public"]["Tables"]["faq_categories"]["Row"];
 type FAQItem = Database["public"]["Tables"]["faq_items"]["Row"];
+type Location = Database["public"]["Tables"]["locations"]["Row"];
 
 /**
  * Hämtar artistdata via booking link från Supabase RPC-funktion
@@ -161,4 +162,22 @@ export async function getArtistFAQs(
   );
 
   return categoriesWithItems;
+}
+
+export async function getArtistLocations(
+  artistId: string
+): Promise<Location[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("artist_id", artistId)
+    .order("is_main_studio", { ascending: false });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(`Failed to fetch locations: ${error.message}`);
+  }
+
+  return data || [];
 }
