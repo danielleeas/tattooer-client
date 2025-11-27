@@ -4,6 +4,8 @@ import type { Database } from "@/types/supabase";
 type Artist = Database["public"]["Tables"]["artists"]["Row"];
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
+type FAQCategory = Database["public"]["Tables"]["faq_categories"]["Row"];
+type FAQItem = Database["public"]["Tables"]["faq_items"]["Row"];
 
 /**
  * Hämtar artistdata via booking link från Supabase RPC-funktion
@@ -108,4 +110,55 @@ export async function getArtistFlashes(artistId: string): Promise<Flash[]> {
   }
 
   return data || [];
+}
+
+export interface FAQCategoryWithItems extends FAQCategory {
+  items: FAQItem[];
+}
+
+export async function getArtistFAQs(
+  artistId: string
+): Promise<FAQCategoryWithItems[]> {
+  const supabase = await createClient();
+
+  // Fetch categories
+  const { data: categories, error: categoriesError } = await supabase
+    .from("faq_categories")
+    .select("*")
+    .eq("artist_id", artistId)
+    .order("created_at", { ascending: true });
+
+  if (categoriesError) {
+    console.error("Supabase error:", categoriesError);
+    throw new Error(
+      `Failed to fetch FAQ categories: ${categoriesError.message}`
+    );
+  }
+
+  if (!categories || categories.length === 0) {
+    return [];
+  }
+
+  // Fetch items for each category
+  const categoryIds = categories.map((cat) => cat.id);
+  const { data: items, error: itemsError } = await supabase
+    .from("faq_items")
+    .select("*")
+    .in("category_id", categoryIds)
+    .order("created_at", { ascending: true });
+
+  if (itemsError) {
+    console.error("Supabase error:", itemsError);
+    throw new Error(`Failed to fetch FAQ items: ${itemsError.message}`);
+  }
+
+  // Group items by category
+  const categoriesWithItems: FAQCategoryWithItems[] = categories.map(
+    (category) => ({
+      ...category,
+      items: items?.filter((item) => item.category_id === category.id) || [],
+    })
+  );
+
+  return categoriesWithItems;
 }
