@@ -1,0 +1,1 @@
+supabase gen types --lang="typescript" --project-id "rrjceacgpemebgmooeny" --schema public > types/supabase.ts

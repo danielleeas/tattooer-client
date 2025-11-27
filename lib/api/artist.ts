@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Artist } from "@/types/artist";
+import type { Database } from "@/types/supabase";
+type Artist = Database["public"]["Tables"]["artists"]["Row"];
 
 /**
  * Hämtar artistdata via booking link från Supabase RPC-funktion
@@ -16,13 +17,9 @@ export async function getArtistByBookingLink(
 
   const supabase = await createClient();
 
-  // const { data, error } = await supabase.from("artists").select("*").eq("booking_link", bookingLink);
-
   const { data, error } = await supabase.rpc("get_artist_by_booking_link", {
     booking_link_param: bookingLink,
   });
-
-  console.log("data", data);
 
   if (error) {
     console.error("Supabase RPC error:", error);
@@ -34,8 +31,30 @@ export async function getArtistByBookingLink(
   }
 
   // RPC kan returnera antingen en array eller ett objekt
-  const artist = Array.isArray(data) ? data[0] : data;
-  return artist as Artist;
+  const artistData = Array.isArray(data) ? data[0] : data;
+
+  // Transform RPC result to match Artist interface
+  const artist = {
+    id: artistData.artist_id,
+    email: artistData.email,
+    full_name: artistData.full_name,
+    photo: artistData.photo,
+    avatar: artistData.avatar,
+    studio_name: artistData.studio_name,
+    booking_link: artistData.booking_link,
+    social_handler: artistData.social_handler,
+    subscription_active: artistData.subscription_active,
+    subscription_type: artistData.subscription_type,
+    // Additional RPC fields
+    subscription: artistData.subscription,
+    app: artistData.app,
+    rule: artistData.rule,
+    flow: artistData.flow,
+    template: artistData.template,
+    locations: artistData.locations,
+  } as unknown as Artist;
+
+  return artist;
 }
 
 export async function getArtistById(id: string): Promise<Artist | null> {

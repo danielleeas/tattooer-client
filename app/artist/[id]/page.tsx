@@ -1,49 +1,43 @@
 import { getBaseUrl, joinUrl } from "@/lib/utils";
 import { getArtistByBookingLink } from "@/lib/api/artist";
-import type { Artist } from "@/types/artist";
+import { ArtistLinkPage } from "@/components/artist/ArtistLinkPage";
 
-export default async function ArtistPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const baseUrl = getBaseUrl();
-    const bookingLink = joinUrl(baseUrl, id);
+export default async function ArtistPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const baseUrl = getBaseUrl();
+  const bookingLink = joinUrl(baseUrl, id);
 
-    let artist: Artist | null = null;
-    let error: string | null = null;
+  let artist = null;
+  let error: string | null = null;
 
-    try {
-        artist = await getArtistByBookingLink(bookingLink);
-        if (!artist) {
-            error = "Artist not found";
-        }
-    } catch (err) {
-        error = err instanceof Error ? err.message : "Failed to fetch artist data";
-        console.error("Error fetching artist:", err);
+  try {
+    artist = await getArtistByBookingLink(bookingLink);
+    if (!artist) {
+      error = "Artist not found";
     }
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to fetch artist data";
+    console.error("Error fetching artist:", err);
+  }
 
-    if (error) {
-        return (
-            <div>
-                <h1>Artist Page</h1>
-                <p className="text-red-500">Error: {error}</p>
-                <p>Artist Username: {id}</p>
-                <p>Booking Link: {bookingLink}</p>
-            </div>
-        );
-    }
-
+  if (error || !artist) {
     return (
-        <div>
-            <h1>Artist Page</h1>
-            {artist ? (
-                <>
-                    <h2>{artist.full_name || "Unknown Artist"}</h2>
-                    <p>Artist ID: {artist.id || id}</p>
-                    <p>Booking Link: {artist.booking_link || bookingLink}</p>
-                    {/* Lägg till fler fält baserat på vad artist-objektet innehåller */}
-                </>
-            ) : (
-                <p>No artist data available</p>
-            )}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-medium text-foreground">
+            Artist Not Found
+          </h1>
+          <p className="text-muted-foreground">
+            {error || "The artist you're looking for doesn't exist."}
+          </p>
         </div>
+      </div>
     );
+  }
+
+  return <ArtistLinkPage artist={artist} />;
 }

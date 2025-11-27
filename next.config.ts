@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["194.242.11.214"],
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'rrjceacgpemebgmooeny.supabase.co',
+        port: '',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
