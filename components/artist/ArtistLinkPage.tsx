@@ -48,7 +48,7 @@ export function ArtistLinkPage({ artist, className }: ArtistLinkPageProps) {
       </div>
       {/* Profile Image */}
       <ArtistProfileImage
-        src={artist.photo || artist.avatar}
+        src={artist.avatar || artist.photo}
         alt={artist.full_name || "Artist profile"}
         className="w-[200px] h-[200px]"
       />
