@@ -64,6 +64,7 @@ export function FlashesClient({
           title="Flash"
           description="Browse My Available Flash Designs!"
           icon="/assets/images/icons/flash.png"
+          className="h-[180px]"
         />
 
         {/* Flash Grid */}
