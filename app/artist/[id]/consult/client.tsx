@@ -9,7 +9,6 @@ import {
   FieldErrors,
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
-import { BookingHeader } from "@/components/artist/BookingHeader";
 import { PhotoUpload } from "@/components/common/PhotoUpload";
 import { DatePicker } from "@/components/common/DatePicker";
 import { TimeSlotSelector } from "@/components/common/TimeSlotSelector";
@@ -26,6 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Video, Users } from "lucide-react";
 import type { Database } from "@/types/supabase";
+import { SectionHeader } from "@/components/common/SectionHeader";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ConsultClientProps {
   artistId: string;
@@ -46,6 +47,8 @@ interface ConsultFormData {
   tattooIdea: string;
   tattooType: "coverup" | "addon" | "between" | "";
   referencePhotos: File[];
+  legalAge: boolean;
+  agreeToPolicies: boolean;
 }
 
 export function ConsultClient({
@@ -74,6 +77,8 @@ export function ConsultClient({
       tattooIdea: "",
       tattooType: "",
       referencePhotos: [],
+      legalAge: false,
+      agreeToPolicies: false,
     },
     mode: "onChange",
   });
@@ -112,10 +117,15 @@ export function ConsultClient({
       <BackButton href={basePath} />
 
       {/* Booking Header */}
-      <BookingHeader
+      <SectionHeader
         artistName={artist.full_name || "Artist"}
-        title={`Book a consult`}
+        title={
+          <p>
+            Book a<br /> Consult
+          </p>
+        }
         icon="/assets/images/icons/video_camera.png"
+        description="Please tell us about yourself and your idea!"
       />
 
       {/* Consult Form */}
@@ -186,7 +196,7 @@ const ConsultFormContent = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Full Name */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="fullName" className="text-base font-semibold">
+        <Label htmlFor="fullName" className="text-xl">
           Full Name
         </Label>
         <Input
@@ -202,7 +212,7 @@ const ConsultFormContent = ({
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email" className="text-base font-semibold">
+        <Label htmlFor="email" className="text-xl">
           Email
         </Label>
         <Input
@@ -225,7 +235,7 @@ const ConsultFormContent = ({
 
       {/* Phone Number */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="phoneNumber" className="text-base font-semibold">
+        <Label htmlFor="phoneNumber" className="text-xl">
           Phone Number
         </Label>
         <Input
@@ -246,8 +256,8 @@ const ConsultFormContent = ({
 
       {/* City & Country */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="cityCountry" className="text-base font-semibold">
-          City & Country of Residence
+        <Label htmlFor="cityCountry" className="text-xl">
+          City/Country of Residence
         </Label>
         <Input
           id="cityCountry"
@@ -266,7 +276,7 @@ const ConsultFormContent = ({
 
       {/* Tattoo Booking Location */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="location" className="text-base font-semibold">
+        <Label htmlFor="location" className="text-xl">
           Tattoo Booking Location
         </Label>
         <Select
@@ -299,7 +309,7 @@ const ConsultFormContent = ({
 
       {/* Tattoo Idea */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooIdea" className="text-base font-semibold">
+        <Label htmlFor="tattooIdea" className="text-xl">
           Please Tell Me Your Tattoo Idea
         </Label>
         <Textarea
@@ -317,8 +327,9 @@ const ConsultFormContent = ({
 
       {/* Tattoo Type */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooType" className="text-base font-semibold">
-          Is this a coverup/add on/or between existing tattoos?
+        <Label htmlFor="tattooType" className="text-xl">
+          Is this a coverup/add on/or between existing tattoos (please include
+          photo)
         </Label>
         <Select
           value={tattooType}
@@ -357,12 +368,53 @@ const ConsultFormContent = ({
           setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
         }}
         maxPhotos={5}
-        label="Upload Reference Photos (Max 5)"
+        label="Upload Reference Photos"
       />
+
+      {/* Legal Checkboxes */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="legalAge"
+            {...register("legalAge", {
+              required: "You must confirm you are of legal age to get tattooed",
+            })}
+          />
+          <Label
+            htmlFor="legalAge"
+            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I am of legal age to get tattooed
+          </Label>
+        </div>
+        {errors.legalAge && (
+          <p className="text-sm text-destructive">{errors.legalAge.message}</p>
+        )}
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="agreeToPolicies"
+            {...register("agreeToPolicies", {
+              required: "You must agree to the policies to continue",
+            })}
+          />
+          <Label
+            htmlFor="agreeToPolicies"
+            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I have read & agree to the policies
+          </Label>
+        </div>
+        {errors.agreeToPolicies && (
+          <p className="text-sm text-destructive">
+            {errors.agreeToPolicies.message}
+          </p>
+        )}
+      </div>
 
       {/* Consultation Type Selection */}
       <div className="flex flex-col gap-3">
-        <Label className="text-base font-semibold">Consultation Type</Label>
+        <Label className="text-xl">Consultation Type</Label>
         <div className="flex gap-4">
           <button
             type="button"
@@ -424,7 +476,7 @@ const ConsultFormContent = ({
       {/* Selected Date Display */}
       {selectedDate && (
         <div className="flex flex-col gap-2">
-          <Label className="text-base font-semibold">
+          <Label className="text-xl">
             Selected Date -{" "}
             {(() => {
               const [year, month, day] = selectedDate.split("-").map(Number);

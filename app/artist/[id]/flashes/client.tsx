@@ -6,6 +6,7 @@ import { FlashHeader } from "@/components/artist/FlashHeader";
 import { FlashGrid } from "@/components/artist/FlashGrid";
 import { FlashDrawer } from "@/components/artist/FlashDrawer";
 import type { Database } from "@/types/supabase";
+import { SectionHeader } from "@/components/common/SectionHeader";
 
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 
@@ -59,7 +60,11 @@ export function FlashesClient({
         <BackButton href={basePath} />
 
         {/* Flash Header */}
-        <FlashHeader />
+        <SectionHeader
+          title="Flash"
+          description="Browse My Available Flash Designs!"
+          icon="/assets/images/icons/flash.png"
+        />
 
         {/* Flash Grid */}
         <FlashGrid flashes={flashes} onFlashClick={handleFlashClick} />

@@ -7,6 +7,7 @@ import {
 import { FlashCard } from "./FlashCard";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { SectionHeader } from "../common/SectionHeader";
 
 interface FlashDrawerProps {
   isOpen: boolean;
@@ -29,27 +30,17 @@ export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
       >
         {/* Content */}
         <div className="space-y-6">
-          {/* Flash Icon and Title */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative w-12 h-12 flex items-center justify-center">
-              <Image
-                src="/assets/images/icons/flash.png"
-                alt="Flash"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <DialogTitle className="text-xl font-semibold text-foreground">
-              Claim This Piece?
-            </DialogTitle>
-          </div>
-
-          {/* Description */}
-          <div className="text-center">
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Please double-check that you selected the correct pieces to claim.
-            </p>
-          </div>
+          {/* Dialog Header */}
+          <SectionHeader
+            title={
+              <DialogTitle>
+                <p className="text-3xl font-normal">Claim This Piece?</p>
+              </DialogTitle>
+            }
+            titleClassName="normal-case"
+            description="Please double-check that you selected the correct pieces to claim."
+            icon="/assets/images/icons/flash.png"
+          />
 
           {/* Flash Grid Item */}
           {flash && (
@@ -63,7 +54,7 @@ export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
             </div>
           )}
 
-          <p>
+          <p className="font-normal">
             Are there any modifications to this piece you’d like us to consider?
             (Ex: Color, size, placement) Changes may affect the price.{" "}
           </p>
@@ -84,12 +75,12 @@ export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
               {/* <button className="flex-1 px-4 py-3 text-sm font-medium text-muted-foreground bg-muted rounded-full border border-muted-foreground hover:bg-muted/80 transition-colors">
                 Cancel
               </button> */}
-              <Button variant="outline" className="rounded-full">
+              <Button variant="outline" className="rounded-full py-4">
                 Cancel
               </Button>
             </DialogClose>
-            <Button variant="default" className="rounded-full">
-              Claim Now
+            <Button variant="default" className="rounded-full py-4">
+              Claim
             </Button>
           </div>
         </div>

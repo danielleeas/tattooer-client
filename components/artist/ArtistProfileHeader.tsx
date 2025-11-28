@@ -12,12 +12,11 @@ export function ArtistProfileHeader({
   className,
 }: ArtistProfileHeaderProps) {
   return (
-    <div className={cn("flex flex-col items-center gap-2", className)}>
-      <h1 className="text-3xl font-medium text-foreground">{name}</h1>
+    <div className={cn("flex flex-col items-center gap-1", className)}>
+      <h1 className="text-4xl text-foreground">{name}</h1>
       {instagramHandle && (
-        <p className="text-base text-foreground/80">@{instagramHandle}</p>
+        <p className="text-xl text-foreground">@{instagramHandle}</p>
       )}
     </div>
   );
 }
-

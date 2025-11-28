@@ -9,7 +9,6 @@ import {
   FieldErrors,
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
-import { BookingHeader } from "@/components/artist/BookingHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,8 +21,11 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Camera, X } from "lucide-react";
 import type { Database } from "@/types/supabase";
+import { SectionHeader } from "@/components/common/SectionHeader";
+import Image from "next/image";
 
 interface BookingClientProps {
   artistId: string;
@@ -42,6 +44,8 @@ interface BookingFormData {
   tattooIdea: string;
   tattooType: "coverup" | "addon" | "between" | "";
   photos: File[];
+  legalAge: boolean;
+  agreeToPolicies: boolean;
 }
 
 export function BookingClient({
@@ -68,6 +72,8 @@ export function BookingClient({
       tattooIdea: "",
       tattooType: "",
       photos: [],
+      legalAge: false,
+      agreeToPolicies: false,
     },
     mode: "onChange",
   });
@@ -126,10 +132,15 @@ export function BookingClient({
       <BackButton href={basePath} />
 
       {/* Booking Header */}
-      <BookingHeader
+      <SectionHeader
         artistName={artist.full_name || "Artist"}
-        title={`${artist.full_name} - Booking Form`}
-        icon="/assets/images/icons/chat.png"
+        title={
+          <p>
+            {artist.full_name} -<br /> Booking Form
+          </p>
+        }
+        icon="/assets/images/icons/portfolio.png"
+        description="I'm happy you're here! Please fill out this short form so we can get started."
       />
 
       {/* Booking Form */}
@@ -187,7 +198,7 @@ const BookingFormContent = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Full Name */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="fullName" className="text-base font-semibold">
+        <Label htmlFor="fullName" className="text-xl">
           Full Name
         </Label>
         <Input
@@ -203,7 +214,7 @@ const BookingFormContent = ({
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email" className="text-base font-semibold">
+        <Label htmlFor="email" className="text-xl">
           Email
         </Label>
         <Input
@@ -226,7 +237,7 @@ const BookingFormContent = ({
 
       {/* Phone Number */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="phoneNumber" className="text-base font-semibold">
+        <Label htmlFor="phoneNumber" className="text-xl">
           Phone Number
         </Label>
         <Input
@@ -247,7 +258,7 @@ const BookingFormContent = ({
 
       {/* City & Country */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="cityCountry" className="text-base font-semibold">
+        <Label htmlFor="cityCountry" className="text-xl">
           City & Country of Residence
         </Label>
         <Input
@@ -267,7 +278,7 @@ const BookingFormContent = ({
 
       {/* Tattoo Booking Location */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="location" className="text-base font-semibold">
+        <Label htmlFor="location" className="text-xl">
           Tattoo Booking Location
         </Label>
         <Select
@@ -300,13 +311,13 @@ const BookingFormContent = ({
 
       {/* Preferred Days */}
       <div className="flex flex-col gap-2">
-        <Label className="text-base font-semibold">Preferred days</Label>
+        <Label className="text-xl">Preferred days</Label>
         <RadioGroup
           value={preferredDays}
           onValueChange={(value: "any" | "weekdays" | "weekend") =>
             setValue("preferredDays", value)
           }
-          className="flex gap-6"
+          className="flex gap-4 flex-col"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="any" id="any" />
@@ -331,7 +342,7 @@ const BookingFormContent = ({
 
       {/* Tattoo Idea */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooIdea" className="text-base font-semibold">
+        <Label htmlFor="tattooIdea" className="text-xl">
           Please Tell Me Your Tattoo Idea
         </Label>
         <Textarea
@@ -349,8 +360,9 @@ const BookingFormContent = ({
 
       {/* Tattoo Type */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooType" className="text-base font-semibold">
-          Is this a coverup/add on/or between existing tattoos?
+        <Label htmlFor="tattooType" className="text-xl">
+          Is this a coverup/add on/or between existing tattoos (please include
+          photo)
         </Label>
         <Select
           value={tattooType}
@@ -372,10 +384,15 @@ const BookingFormContent = ({
       {/* Upload Reference Photos */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Camera className="w-5 h-5" />
-          <Label htmlFor="photos" className="text-base font-semibold">
+          <Label htmlFor="photos" className="text-xl">
             Upload Reference Photos (Max 5)
           </Label>
+          <Image
+            src={"/assets/images/icons/camera.png"}
+            alt="Camera"
+            width={32}
+            height={32}
+          />
         </div>
         <input
           id="photos"
@@ -419,6 +436,47 @@ const BookingFormContent = ({
         )}
       </div>
 
+      {/* Legal Checkboxes */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="legalAge"
+            {...register("legalAge", {
+              required: "You must confirm you are of legal age to get tattooed",
+            })}
+          />
+          <Label
+            htmlFor="legalAge"
+            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I am of legal age to get tattooed
+          </Label>
+        </div>
+        {errors.legalAge && (
+          <p className="text-sm text-destructive">{errors.legalAge.message}</p>
+        )}
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="agreeToPolicies"
+            {...register("agreeToPolicies", {
+              required: "You must agree to the policies to continue",
+            })}
+          />
+          <Label
+            htmlFor="agreeToPolicies"
+            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I have read & agree to the policies
+          </Label>
+        </div>
+        {errors.agreeToPolicies && (
+          <p className="text-sm text-destructive">
+            {errors.agreeToPolicies.message}
+          </p>
+        )}
+      </div>
+
       {/* Submit Button */}
       <Button
         type="submit"
@@ -426,7 +484,7 @@ const BookingFormContent = ({
         className="w-full rounded-full"
         size="lg"
       >
-        {isSubmitting ? "Submitting..." : "Submit Booking Request"}
+        {isSubmitting ? "Loading..." : "Looks Good — Continue"}
       </Button>
     </form>
   );

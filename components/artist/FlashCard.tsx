@@ -39,7 +39,7 @@ export function FlashCard({
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4">
-        {name && <p className="text-white font-medium mb-1">{name}</p>}
+        {name && <p className="text-white">{name}</p>}
         <p className="text-white/90 text-sm">${price.toFixed(2)}</p>
       </div>
     </div>

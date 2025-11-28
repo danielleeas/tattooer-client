@@ -40,7 +40,7 @@ export function ActionLinkButton({
           className="object-contain shrink-0"
         />
       </div>
-      <span className="text-lg font-medium text-foreground w-[100px] text-center">
+      <span className="text-lg text-foreground w-[100px] text-center leading-tight">
         {label}
       </span>
     </Link>

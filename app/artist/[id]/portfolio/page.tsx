@@ -4,6 +4,7 @@ import { BackButton } from "@/components/artist/BackButton";
 import { PortfolioHeader } from "@/components/artist/PortfolioHeader";
 import { PortfolioGrid } from "@/components/artist/PortfolioGrid";
 import type { Database } from "@/types/supabase";
+import { SectionHeader } from "@/components/common/SectionHeader";
 
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 
@@ -57,7 +58,11 @@ export default async function PortfolioPage({
       <BackButton href={basePath} />
 
       {/* Portfolio Header */}
-      <PortfolioHeader />
+      <SectionHeader
+        icon="/assets/images/icons/portfolio.png"
+        title="Portfolio"
+        description="Take A Browse Through My Work For Inspiration!"
+      />
 
       {/* Portfolio Grid */}
       <PortfolioGrid portfolios={portfolios} />

@@ -6,6 +6,7 @@ import { FAQAccordion } from "@/components/artist/FAQAccordion";
 import { MapPin } from "lucide-react";
 import type { Database } from "@/types/supabase";
 import type { FAQCategoryWithItems } from "@/lib/api/artist";
+import { SectionHeader } from "@/components/common/SectionHeader";
 
 interface FAQsClientProps {
   artistId: string;
@@ -38,29 +39,33 @@ export function FAQsClient({ artistId, artist, faqs, error }: FAQsClientProps) {
       <BackButton href={basePath} />
 
       {/* FAQ Header */}
-      <FAQHeader />
+      <SectionHeader
+        icon="/assets/images/icons/question.png"
+        title="FAQs"
+        description="Your questions, answered."
+      />
 
       {/* FAQ Accordion */}
       <FAQAccordion categories={faqs} />
 
       {/* Contact Section */}
       <div className="mt-auto pt-8 space-y-4">
-        <div className="text-center space-y-2">
-          <h3 className="text-base font-medium text-foreground">
-            Got another question?
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Just reach out, we&apos;re happy to help.
-          </p>
-        </div>
-        <div className="flex items-center justify-center gap-2">
-          <MapPin className="w-4 h-4 text-destructive" />
-          <a
-            href="mailto:darkoceantattoo@gmail.com"
-            className="text-sm text-foreground hover:underline"
-          >
-            darkoceantattoo@gmail.com
-          </a>
+        <div className="space-y-2">
+          <h3 className="text-xl text-foreground">Got another question?</h3>
+          <div>
+            <p className="text-muted-foreground">
+              Just reach out, we&apos;re happy to help.
+            </p>
+            <div className="flex items-center">
+              <MapPin className="w-4 h-4 text-destructive" />
+              <a
+                href="mailto:darkoceantattoo@gmail.com"
+                className="text-foreground hover:underline"
+              >
+                darkoceantattoo@gmail.com
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -43,10 +43,15 @@ export function PhotoUpload({
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center gap-2">
-        <Camera className="w-5 h-5" />
         <Label className="text-base font-semibold">
           {label} (Max {maxPhotos})
         </Label>
+        <Image
+          src={"/assets/images/icons/camera.png"}
+          alt="Camera"
+          width={32}
+          height={32}
+        />
       </div>
 
       <input
