@@ -1,8 +1,11 @@
 import { getBaseUrl, joinUrl } from "@/lib/utils";
-import { getArtistByBookingLink } from "@/lib/api/artist";
-import { ArtistLinkPage } from "@/components/artist/ArtistLinkPage";
+import { getArtistByBookingLink, getArtistFlashes } from "@/lib/api/artist";
+import { FlashesClient } from "./client";
+import type { Database } from "@/types/supabase";
 
-export default async function ArtistPage({
+type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
+
+export default async function FlashesPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -12,16 +15,19 @@ export default async function ArtistPage({
   const bookingLink = joinUrl(baseUrl, id);
 
   let artist = null;
+  let flashes: Flash[] = [];
   let error: string | null = null;
 
   try {
     artist = await getArtistByBookingLink(bookingLink);
     if (!artist) {
       error = "Artist not found";
+    } else {
+      flashes = await getArtistFlashes(artist.id);
     }
   } catch (err) {
-    error = err instanceof Error ? err.message : "Failed to fetch artist data";
-    console.error("Error fetching artist:", err);
+    error = err instanceof Error ? err.message : "Failed to fetch data";
+    console.error("Error fetching data:", err);
   }
 
   if (error || !artist) {
@@ -39,5 +45,12 @@ export default async function ArtistPage({
     );
   }
 
-  return <ArtistLinkPage artist={artist} />;
+  return (
+    <FlashesClient
+      artistId={id}
+      artist={artist}
+      flashes={flashes}
+      error={error}
+    />
+  );
 }
