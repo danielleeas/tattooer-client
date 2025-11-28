@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased">
-        <div className="min-h-screen w-full max-w-[400px] mx-auto">
+        <div className="min-h-screen w-full max-w-[390px] mx-auto px-1">
           {children}
         </div>
       </body>

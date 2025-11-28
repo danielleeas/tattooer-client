@@ -1,9 +1,6 @@
 import { getBaseUrl, joinUrl } from "@/lib/utils";
-import { getArtistByBookingLink, getArtistLocations } from "@/lib/api/artist";
+import { getArtistByBookingLink } from "@/lib/api/artist";
 import { AutoBookingClient } from "./client";
-import type { Database } from "@/types/supabase";
-
-type Location = Database["public"]["Tables"]["locations"]["Row"];
 
 export default async function AutoBookingPage({
   params,
@@ -15,15 +12,12 @@ export default async function AutoBookingPage({
   const bookingLink = joinUrl(baseUrl, id);
 
   let artist = null;
-  let locations: Location[] = [];
   let error: string | null = null;
 
   try {
     artist = await getArtistByBookingLink(bookingLink);
     if (!artist) {
       error = "Artist not found";
-    } else {
-      locations = await getArtistLocations(artist.id);
     }
   } catch (err) {
     error = err instanceof Error ? err.message : "Failed to fetch data";
@@ -45,12 +39,5 @@ export default async function AutoBookingPage({
     );
   }
 
-  return (
-    <AutoBookingClient
-      artistId={id}
-      artist={artist}
-      locations={locations}
-      error={error}
-    />
-  );
+  return <AutoBookingClient artistId={id} artist={artist} error={error} />;
 }

@@ -62,6 +62,7 @@ export default async function PortfolioPage({
         icon="/assets/images/icons/portfolio.png"
         title="Portfolio"
         description="Take A Browse Through My Work For Inspiration!"
+        className="px-10 h-[180px]"
       />
 
       {/* Portfolio Grid */}

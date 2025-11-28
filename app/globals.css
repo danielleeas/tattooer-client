@@ -11,10 +11,18 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Arial";
+  src: url("/assets/fonts/arial_ce.ttf") format("truetype");
+  font-display: swap;
+  font-weight: bold;
+  font-style: normal;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-arial: "Arial", sans-serif;
+  --font-arial: "Arial", "Arial CE", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -138,5 +146,11 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-arial);
+  }
+
+  /* Ensure all text elements use Arial font */
+  html, body, div, span, p, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select {
+    font-family: var(--font-arial);
   }
 }

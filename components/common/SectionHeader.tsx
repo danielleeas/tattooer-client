@@ -32,14 +32,14 @@ export function SectionHeader({
           className="object-contain"
         />
       </div>
-      <h1
+      <div
         className={cn(
           "text-lg text-foreground text-center uppercase tracking-wide leading-tight",
           titleClassName
         )}
       >
         {title}
-      </h1>
+      </div>
       <p
         className={cn(
           "text-sm text-muted-foreground text-center max-w-md",

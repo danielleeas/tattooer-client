@@ -2,29 +2,31 @@
 
 import { useState } from "react";
 import { BackButton } from "@/components/artist/BackButton";
-import { DatePicker, TimeSlotSelector } from "@/components/common";
+import { DatePicker, TimeAccordion } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { Database } from "@/types/supabase";
 import Image from "next/image";
+
+interface DateTime {
+  date: string;
+  time: string;
+}
 
 interface AutoBookingClientProps {
   artistId: string;
   artist: Database["public"]["Tables"]["artists"]["Row"] | null;
-  locations: Database["public"]["Tables"]["locations"]["Row"][];
   error: string | null;
 }
 
 export function AutoBookingClient({
   artistId,
   artist,
-  locations,
   error,
 }: AutoBookingClientProps) {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedDateTimes, setSelectedDateTimes] = useState<DateTime[]>([]);
   const [numberOfSessions, setNumberOfSessions] = useState<number>(3);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
@@ -40,11 +42,12 @@ export function AutoBookingClient({
 
   // Sample time slots - in real app, these would come from API
   const timeSlots = [
-    "09:15 AM",
+    "09:00 AM",
+    "09:30 AM",
     "10:00 AM",
+    "10:30 AM",
     "11:00 AM",
-    "02:00 PM",
-    "03:30 PM",
+    "11:30 AM",
   ];
 
   if (error || !artist) {
@@ -64,17 +67,14 @@ export function AutoBookingClient({
 
   const basePath = `/artist/${artistId}`;
 
-  const handleDateSelect = (dateStr: string) => {
-    setSelectedDate(dateStr);
-  };
-
   const calculateDateRange = () => {
-    if (!selectedDate) return null;
+    if (selectedDateTimes.length === 0) return null;
 
-    const startDate = new Date(selectedDate);
-    // Calculate end date based on number of sessions (assuming sessions are daily)
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + numberOfSessions - 1);
+    const dates = selectedDateTimes
+      .map((dt) => new Date(dt.date))
+      .sort((a, b) => a.getTime() - b.getTime());
+    const startDate = dates[0];
+    const endDate = dates[dates.length - 1];
 
     return {
       start: startDate,
@@ -83,10 +83,10 @@ export function AutoBookingClient({
   };
 
   const formatDateRange = () => {
-    if (!selectedDate) return "Select dates";
+    if (selectedDateTimes.length === 0) return "Select dates";
 
     const range = calculateDateRange();
-    if (!range) return formatDate(selectedDate);
+    if (!range) return "Select dates";
 
     const start = range.start;
     const end = range.end;
@@ -97,30 +97,31 @@ export function AutoBookingClient({
     const endDay = end.getDate();
     const year = end.getFullYear();
 
+    if (startMonth === endMonth && startDay === endDay) {
+      return `${startMonth} ${startDay}, ${year}`;
+    }
     if (startMonth === endMonth) {
       return `${startMonth} ${startDay}-${endDay}, ${year}`;
     }
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const month = date.toLocaleString("default", { month: "long" });
-    const day = date.getDate();
-    const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
-  };
-
   const handleConfirmAppointments = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Please select a date and time");
+    if (selectedDateTimes.length === 0) {
+      alert("Please select dates and times");
       return;
     }
+
+    const incompleteSelections = selectedDateTimes.filter((dt) => !dt.time);
+    if (incompleteSelections.length > 0) {
+      alert("Please select a time for all selected dates");
+      return;
+    }
+
     // TODO: Handle appointment confirmation
     const range = calculateDateRange();
     console.log("Confirming appointments:", {
-      date: selectedDate,
-      time: selectedTime,
+      selectedDateTimes,
       dateRange: range,
       numberOfSessions,
     });
@@ -181,29 +182,64 @@ export function AutoBookingClient({
 
       {/* Calendar */}
       <DatePicker
-        selectedDate={selectedDate}
-        onDateSelect={handleDateSelect}
-        className="w-full"
+        selectedDates={selectedDateTimes.map((dt) => dt.date)}
+        onDatesSelect={(dates) => {
+          // When dates change, update the dateTimes array
+          const newDateTimes = dates.map((dateStr) => {
+            const existing = selectedDateTimes.find(
+              (dt) => dt.date === dateStr
+            );
+            return existing || { date: dateStr, time: "" };
+          });
+          setSelectedDateTimes(newDateTimes);
+        }}
+        isMultiple={true}
       />
 
-      {/* Selected Date and Time Confirmation */}
-      {selectedDate && (
+      {/* Time Selection Accordion */}
+      <TimeAccordion
+        selectedDates={selectedDateTimes.map((dt) => dt.date)}
+        selectedDateTimes={selectedDateTimes}
+        onDateTimesSelect={setSelectedDateTimes}
+        timeSlots={timeSlots}
+      />
+
+      {/* Selected Appointments Confirmation */}
+      {selectedDateTimes.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-xl">
-            Selected Date - {formatDate(selectedDate)}
+          {/* <h2 className="text-xl">
+            Selected Appointments ({selectedDateTimes.length})
           </h2>
 
-          <TimeSlotSelector
-            timeSlots={timeSlots}
-            selectedTime={selectedTime}
-            onTimeSelect={setSelectedTime}
-          />
+          <div className="space-y-2">
+            {selectedDateTimes.map((dateTime) => {
+              const [year, month, day] = dateTime.date.split("-").map(Number);
+              const date = new Date(year, month - 1, day);
+              const formattedDate = date.toLocaleDateString("default", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              });
+
+              return (
+                <div
+                  key={dateTime.date}
+                  className="flex items-center justify-between p-3 bg-secondary rounded-lg"
+                >
+                  <span className="font-medium">{formattedDate}</span>
+                  <span className="text-muted-foreground">
+                    {dateTime.time || "Time not selected"}
+                  </span>
+                </div>
+              );
+            })}
+          </div> */}
 
           <Button
             onClick={handleConfirmAppointments}
             className="w-full rounded-full py-3 text-base"
             size="lg"
-            disabled={!selectedTime}
+            disabled={selectedDateTimes.some((dt) => !dt.time)}
           >
             Confirm Appointments
           </Button>

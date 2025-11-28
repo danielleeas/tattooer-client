@@ -12,19 +12,16 @@ import { BackButton } from "@/components/artist/BackButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Camera, X } from "lucide-react";
 import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
+import {
+  LocationSelectModal,
+  TattooTypeSelectModal,
+} from "@/components/common";
 import Image from "next/image";
 
 interface BookingClientProps {
@@ -278,32 +275,20 @@ const BookingFormContent = ({
 
       {/* Tattoo Booking Location */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="location" className="text-xl">
-          Tattoo Booking Location
-        </Label>
-        <Select
+        <Label className="text-xl">Tattoo Booking Location</Label>
+        <LocationSelectModal
           value={location}
           onValueChange={(value) => {
             setValue("location", value, { shouldValidate: true });
           }}
-        >
-          <input
-            type="hidden"
-            {...register("location", {
-              required: "Please select a location",
-            })}
-          />
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder="Select a location" />
-          </SelectTrigger>
-          <SelectContent>
-            {locations.map((loc) => (
-              <SelectItem key={loc.id} value={loc.id}>
-                {loc.address}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          locations={locations}
+        />
+        <input
+          type="hidden"
+          {...register("location", {
+            required: "Please select a location",
+          })}
+        />
         {errors.location && (
           <p className="text-sm text-destructive">{errors.location.message}</p>
         )}
@@ -360,25 +345,16 @@ const BookingFormContent = ({
 
       {/* Tattoo Type */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooType" className="text-xl">
+        <Label className="text-xl">
           Is this a coverup/add on/or between existing tattoos (please include
           photo)
         </Label>
-        <Select
+        <TattooTypeSelectModal
           value={tattooType}
           onValueChange={(value) =>
             setValue("tattooType", value as "coverup" | "addon" | "between")
           }
-        >
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder="Select an option" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="coverup">Cover Up</SelectItem>
-            <SelectItem value="addon">Add On</SelectItem>
-            <SelectItem value="between">Between Existing Tattoos</SelectItem>
-          </SelectContent>
-        </Select>
+        />
       </div>
 
       {/* Upload Reference Photos */}

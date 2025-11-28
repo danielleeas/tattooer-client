@@ -4,8 +4,9 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DatePickerProps {
-  selectedDate: string | null;
-  onDateSelect: (dateStr: string) => void;
+  selectedDates?: string[];
+  onDatesSelect?: (dateStrs: string[]) => void;
+  isMultiple?: boolean;
   isDateAvailable?: (date: Date) => boolean;
   className?: string;
 }
@@ -24,8 +25,9 @@ const defaultIsDateAvailable = (date: Date) => {
 };
 
 export function DatePicker({
-  selectedDate,
-  onDateSelect,
+  selectedDates = [],
+  onDatesSelect,
+  isMultiple = false,
   isDateAvailable = defaultIsDateAvailable,
   className = "",
 }: DatePickerProps) {
@@ -37,12 +39,18 @@ export function DatePicker({
     return { year, month: month - 1, day }; // month is 0-indexed
   };
 
-  const selectedDateParts = selectedDate
-    ? parseSelectedDate(selectedDate)
-    : null;
-  const selectedDay = selectedDateParts?.day || null;
-  const selectedMonth = selectedDateParts?.month || null;
-  const selectedYear = selectedDateParts?.year || null;
+  // Use selectedDates directly (empty array for no selection)
+
+  const selectedDateParts = selectedDates.map((dateStr) =>
+    parseSelectedDate(dateStr)
+  );
+
+  const isDateSelected = (year: number, month: number, day: number) => {
+    return selectedDateParts.some(
+      (parts) =>
+        parts.year === year && parts.month === month && parts.day === day
+    );
+  };
 
   // Get days in month
   const getDaysInMonth = (date: Date) => {
@@ -80,7 +88,33 @@ export function DatePicker({
     const dateStr = `${currentMonth.getFullYear()}-${String(
       currentMonth.getMonth() + 1
     ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    onDateSelect(dateStr);
+
+    if (isMultiple) {
+      // Handle multiple selection
+      const isCurrentlySelected = isDateSelected(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth(),
+        day
+      );
+
+      let newSelectedDates;
+      if (isCurrentlySelected) {
+        // Remove the date if already selected
+        newSelectedDates = selectedDates.filter((date) => date !== dateStr);
+      } else {
+        // Add the date if not selected
+        newSelectedDates = [...selectedDates, dateStr];
+      }
+
+      if (onDatesSelect) {
+        onDatesSelect(newSelectedDates);
+      }
+    } else {
+      // Handle single selection (replace current selection)
+      if (onDatesSelect) {
+        onDatesSelect([dateStr]);
+      }
+    }
   };
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -97,9 +131,15 @@ export function DatePicker({
 
   return (
     <div
-      className={`flex flex-col gap-3 bg-secondary p-4 rounded-lg ${className}`}
+      className={`flex flex-col gap-1 bg-secondary p-4 rounded-lg ${className}`}
     >
-      <div className="flex items-center justify-between mb-2">
+      {isMultiple && selectedDates.length > 0 && (
+        <div className="text-xs text-muted-foreground mb-2 text-center">
+          {selectedDates.length} date
+          {selectedDates.length !== 1 ? "s" : ""} selected
+        </div>
+      )}
+      <div className="flex items-center justify-between">
         <button
           type="button"
           onClick={() => navigateMonth("prev")}
@@ -107,9 +147,11 @@ export function DatePicker({
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h3 className="text-lg font-semibold">
-          {monthName} {year}
-        </h3>
+        <div className="flex flex-col items-center">
+          <h3 className="text-lg font-semibold">
+            {monthName} {year}
+          </h3>
+        </div>
         <button
           type="button"
           onClick={() => navigateMonth("next")}
@@ -144,10 +186,11 @@ export function DatePicker({
             day
           );
           const isAvailable = isDateAvailable(date);
-          const isSelected =
-            selectedDay === day &&
-            selectedMonth === currentMonth.getMonth() &&
-            selectedYear === currentMonth.getFullYear();
+          const isSelected = isDateSelected(
+            currentMonth.getFullYear(),
+            currentMonth.getMonth(),
+            day
+          );
 
           return (
             <div

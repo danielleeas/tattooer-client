@@ -10,29 +10,30 @@ import {
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
 import { PhotoUpload } from "@/components/common/PhotoUpload";
-import { DatePicker } from "@/components/common/DatePicker";
-import { TimeSlotSelector } from "@/components/common/TimeSlotSelector";
+import { DatePicker, TimeAccordion } from "@/components/common";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Video, Users } from "lucide-react";
 import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  LocationSelectModal,
+  TattooTypeSelectModal,
+} from "@/components/common";
 
 interface ConsultClientProps {
   artistId: string;
   artist: Database["public"]["Tables"]["artists"]["Row"] | null;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
   error: string | null;
+}
+
+interface DateTime {
+  date: string;
+  time: string;
 }
 
 interface ConsultFormData {
@@ -42,8 +43,7 @@ interface ConsultFormData {
   cityCountry: string;
   location: string;
   consultationType: "online" | "in-person";
-  selectedDate: string;
-  selectedTime: string;
+  selectedDateTimes: DateTime[];
   tattooIdea: string;
   tattooType: "coverup" | "addon" | "between" | "";
   referencePhotos: File[];
@@ -72,8 +72,7 @@ export function ConsultClient({
       cityCountry: "",
       location: "",
       consultationType: "online",
-      selectedDate: "",
-      selectedTime: "",
+      selectedDateTimes: [],
       tattooIdea: "",
       tattooType: "",
       referencePhotos: [],
@@ -86,8 +85,7 @@ export function ConsultClient({
   const consultationType = watch("consultationType");
   const location = watch("location");
   const tattooType = watch("tattooType");
-  const selectedDate = watch("selectedDate");
-  const selectedTime = watch("selectedTime");
+  const selectedDateTimes = watch("selectedDateTimes");
 
   const onSubmit = async (data: ConsultFormData) => {
     console.log("Consult form submitted:", data);
@@ -140,8 +138,7 @@ export function ConsultClient({
         consultationType={consultationType}
         location={location}
         tattooType={tattooType}
-        selectedDate={selectedDate}
-        selectedTime={selectedTime}
+        selectedDateTimes={selectedDateTimes}
         uploadedPhotos={uploadedPhotos}
         setUploadedPhotos={setUploadedPhotos}
       />
@@ -160,8 +157,7 @@ interface ConsultFormContentProps {
   consultationType: "online" | "in-person";
   location: string;
   tattooType: "coverup" | "addon" | "between" | "";
-  selectedDate: string;
-  selectedTime: string;
+  selectedDateTimes: DateTime[];
   uploadedPhotos: string[];
   setUploadedPhotos: React.Dispatch<React.SetStateAction<string[]>>;
 }
@@ -177,21 +173,10 @@ const ConsultFormContent = ({
   consultationType,
   location,
   tattooType,
-  selectedDate,
-  selectedTime,
+  selectedDateTimes,
   uploadedPhotos,
   setUploadedPhotos,
 }: ConsultFormContentProps) => {
-  // Available time slots
-  const timeSlots = [
-    "09:15 AM",
-    "10:00 AM",
-    "11.30 AM",
-    "01.45 PM",
-    "03:30 PM",
-    "05:00 PM",
-  ];
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Full Name */}
@@ -276,32 +261,20 @@ const ConsultFormContent = ({
 
       {/* Tattoo Booking Location */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="location" className="text-xl">
-          Tattoo Booking Location
-        </Label>
-        <Select
+        <Label className="text-xl">Tattoo Booking Location</Label>
+        <LocationSelectModal
           value={location}
           onValueChange={(value) => {
             setValue("location", value, { shouldValidate: true });
           }}
-        >
-          <input
-            type="hidden"
-            {...register("location", {
-              required: "Please select a location",
-            })}
-          />
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder="Select a location" />
-          </SelectTrigger>
-          <SelectContent>
-            {locations.map((loc) => (
-              <SelectItem key={loc.id} value={loc.id}>
-                {loc.address}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          locations={locations}
+        />
+        <input
+          type="hidden"
+          {...register("location", {
+            required: "Please select a location",
+          })}
+        />
         {errors.location && (
           <p className="text-sm text-destructive">{errors.location.message}</p>
         )}
@@ -327,25 +300,16 @@ const ConsultFormContent = ({
 
       {/* Tattoo Type */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="tattooType" className="text-xl">
+        <Label className="text-xl">
           Is this a coverup/add on/or between existing tattoos (please include
           photo)
         </Label>
-        <Select
+        <TattooTypeSelectModal
           value={tattooType}
           onValueChange={(value) =>
             setValue("tattooType", value as "coverup" | "addon" | "between")
           }
-        >
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder="Select an option" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="coverup">Cover Up</SelectItem>
-            <SelectItem value="addon">Add On</SelectItem>
-            <SelectItem value="between">Between Existing Tattoos</SelectItem>
-          </SelectContent>
-        </Select>
+        />
       </div>
 
       {/* Upload Reference Photos */}
@@ -419,10 +383,8 @@ const ConsultFormContent = ({
           <button
             type="button"
             onClick={() => setValue("consultationType", "online")}
-            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
-              consultationType === "online"
-                ? "border-foreground bg-muted"
-                : "border-input bg-background"
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg transition-all ${
+              consultationType === "online" ? "bg-secondary" : "bg-background"
             }`}
           >
             <Video className="w-6 h-6" />
@@ -431,10 +393,10 @@ const ConsultFormContent = ({
           <button
             type="button"
             onClick={() => setValue("consultationType", "in-person")}
-            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg transition-all ${
               consultationType === "in-person"
-                ? "border-foreground bg-muted"
-                : "border-input bg-background"
+                ? "bg-secondary"
+                : "bg-background"
             }`}
           >
             <Users className="w-6 h-6" />
@@ -456,62 +418,44 @@ const ConsultFormContent = ({
 
       {/* Calendar */}
       <DatePicker
-        selectedDate={selectedDate}
-        onDateSelect={(dateStr) =>
-          setValue("selectedDate", dateStr, { shouldValidate: true })
+        selectedDates={selectedDateTimes.map((dt) => dt.date)}
+        onDatesSelect={(dates) => {
+          // When dates change, update the dateTimes array
+          const newDateTimes = dates.map((dateStr) => {
+            const existing = selectedDateTimes.find(
+              (dt) => dt.date === dateStr
+            );
+            return existing || { date: dateStr, time: "" };
+          });
+          setValue("selectedDateTimes", newDateTimes, { shouldValidate: true });
+        }}
+        isMultiple={true}
+      />
+
+      {/* Time Selection Accordion */}
+      <TimeAccordion
+        selectedDates={selectedDateTimes.map((dt) => dt.date)}
+        selectedDateTimes={selectedDateTimes}
+        onDateTimesSelect={(dateTimes) =>
+          setValue("selectedDateTimes", dateTimes, { shouldValidate: true })
         }
       />
       <input
         type="hidden"
-        {...register("selectedDate", {
-          required: "Please select a date",
+        {...register("selectedDateTimes", {
+          validate: (value) => {
+            if (value.length === 0)
+              return "Please select at least one date and time";
+            if (value.some((dt) => !dt.time))
+              return "Please select a time for all selected dates";
+            return true;
+          },
         })}
       />
-      {errors.selectedDate && (
+      {errors.selectedDateTimes && (
         <p className="text-sm text-destructive">
-          {errors.selectedDate.message}
+          {errors.selectedDateTimes.message}
         </p>
-      )}
-
-      {/* Selected Date Display */}
-      {selectedDate && (
-        <div className="flex flex-col gap-2">
-          <Label className="text-xl">
-            Selected Date -{" "}
-            {(() => {
-              const [year, month, day] = selectedDate.split("-").map(Number);
-              const date = new Date(year, month - 1, day);
-              return date.toLocaleDateString("default", {
-                month: "long",
-                day: "numeric",
-              });
-            })()}
-          </Label>
-        </div>
-      )}
-
-      {/* Time Slot Selection */}
-      {selectedDate && (
-        <>
-          <TimeSlotSelector
-            timeSlots={timeSlots}
-            selectedTime={selectedTime}
-            onTimeSelect={(time) =>
-              setValue("selectedTime", time, { shouldValidate: true })
-            }
-          />
-          <input
-            type="hidden"
-            {...register("selectedTime", {
-              required: "Please select a time slot",
-            })}
-          />
-          {errors.selectedTime && (
-            <p className="text-sm text-destructive">
-              {errors.selectedTime.message}
-            </p>
-          )}
-        </>
       )}
 
       {/* Submit Button */}
