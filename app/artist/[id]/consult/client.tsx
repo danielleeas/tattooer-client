@@ -10,6 +10,9 @@ import {
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
 import { BookingHeader } from "@/components/artist/BookingHeader";
+import { PhotoUpload } from "@/components/common/PhotoUpload";
+import { DatePicker } from "@/components/common/DatePicker";
+import { TimeSlotSelector } from "@/components/common/TimeSlotSelector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,36 +23,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { Camera, X } from "lucide-react";
+import { Video, Users } from "lucide-react";
 import type { Database } from "@/types/supabase";
 
-interface BookingClientProps {
+interface ConsultClientProps {
   artistId: string;
   artist: Database["public"]["Tables"]["artists"]["Row"] | null;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
   error: string | null;
 }
 
-interface BookingFormData {
+interface ConsultFormData {
   fullName: string;
   email: string;
   phoneNumber: string;
   cityCountry: string;
   location: string;
-  preferredDays: "any" | "weekdays" | "weekend";
+  consultationType: "online" | "in-person";
+  selectedDate: string;
+  selectedTime: string;
   tattooIdea: string;
   tattooType: "coverup" | "addon" | "between" | "";
-  photos: File[];
+  referencePhotos: File[];
 }
 
-export function BookingClient({
+export function ConsultClient({
   artistId,
   artist,
   locations,
   error,
-}: BookingClientProps) {
+}: ConsultClientProps) {
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const {
     register,
@@ -57,49 +61,31 @@ export function BookingClient({
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<BookingFormData>({
+  } = useForm<ConsultFormData>({
     defaultValues: {
       fullName: "",
       email: "",
       phoneNumber: "",
       cityCountry: "",
       location: "",
-      preferredDays: "any",
+      consultationType: "online",
+      selectedDate: "",
+      selectedTime: "",
       tattooIdea: "",
       tattooType: "",
-      photos: [],
+      referencePhotos: [],
     },
     mode: "onChange",
   });
 
-  const preferredDays = watch("preferredDays");
+  const consultationType = watch("consultationType");
   const location = watch("location");
   const tattooType = watch("tattooType");
+  const selectedDate = watch("selectedDate");
+  const selectedTime = watch("selectedTime");
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const remainingSlots = 5 - uploadedPhotos.length;
-
-    Array.from(files)
-      .slice(0, remainingSlots)
-      .forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          setUploadedPhotos((prev) => [...prev, result]);
-        };
-        reader.readAsDataURL(file);
-      });
-  };
-
-  const removePhoto = (index: number) => {
-    setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const onSubmit = async (data: BookingFormData) => {
-    console.log("Form submitted:", data);
+  const onSubmit = async (data: ConsultFormData) => {
+    console.log("Consult form submitted:", data);
     // TODO: Submit to API
   };
 
@@ -128,61 +114,74 @@ export function BookingClient({
       {/* Booking Header */}
       <BookingHeader
         artistName={artist.full_name || "Artist"}
-        title={`${artist.full_name} - Booking Form`}
-        icon="/assets/images/icons/chat.png"
+        title={`Book a consult`}
+        icon="/assets/images/icons/video_camera.png"
       />
 
-      {/* Booking Form */}
-      <BookingFormContent
+      {/* Consult Form */}
+      <ConsultFormContent
         register={register}
         handleSubmit={handleSubmit}
         setValue={setValue}
         errors={errors}
         isSubmitting={isSubmitting}
         onSubmit={onSubmit}
-        uploadedPhotos={uploadedPhotos}
-        handlePhotoUpload={handlePhotoUpload}
-        removePhoto={removePhoto}
         locations={locations}
-        preferredDays={preferredDays}
+        consultationType={consultationType}
         location={location}
         tattooType={tattooType}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        uploadedPhotos={uploadedPhotos}
+        setUploadedPhotos={setUploadedPhotos}
       />
     </div>
   );
 }
 
-interface BookingFormContentProps {
-  register: UseFormRegister<BookingFormData>;
-  handleSubmit: UseFormHandleSubmit<BookingFormData>;
-  setValue: UseFormSetValue<BookingFormData>;
-  errors: FieldErrors<BookingFormData>;
+interface ConsultFormContentProps {
+  register: UseFormRegister<ConsultFormData>;
+  handleSubmit: UseFormHandleSubmit<ConsultFormData>;
+  setValue: UseFormSetValue<ConsultFormData>;
+  errors: FieldErrors<ConsultFormData>;
   isSubmitting: boolean;
-  onSubmit: (data: BookingFormData) => void;
-  uploadedPhotos: string[];
-  handlePhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  removePhoto: (index: number) => void;
+  onSubmit: (data: ConsultFormData) => void;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
-  preferredDays: "any" | "weekdays" | "weekend";
+  consultationType: "online" | "in-person";
   location: string;
   tattooType: "coverup" | "addon" | "between" | "";
+  selectedDate: string;
+  selectedTime: string;
+  uploadedPhotos: string[];
+  setUploadedPhotos: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-const BookingFormContent = ({
+const ConsultFormContent = ({
   register,
   handleSubmit,
   setValue,
   errors,
   isSubmitting,
   onSubmit,
-  uploadedPhotos,
-  handlePhotoUpload,
-  removePhoto,
   locations,
-  preferredDays,
+  consultationType,
   location,
   tattooType,
-}: BookingFormContentProps) => {
+  selectedDate,
+  selectedTime,
+  uploadedPhotos,
+  setUploadedPhotos,
+}: ConsultFormContentProps) => {
+  // Available time slots
+  const timeSlots = [
+    "09:15 AM",
+    "10:00 AM",
+    "11.30 AM",
+    "01.45 PM",
+    "03:30 PM",
+    "05:00 PM",
+  ];
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Full Name */}
@@ -298,37 +297,6 @@ const BookingFormContent = ({
         )}
       </div>
 
-      {/* Preferred Days */}
-      <div className="flex flex-col gap-2">
-        <Label className="text-base font-semibold">Preferred days</Label>
-        <RadioGroup
-          value={preferredDays}
-          onValueChange={(value: "any" | "weekdays" | "weekend") =>
-            setValue("preferredDays", value)
-          }
-          className="flex gap-6"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="any" id="any" />
-            <Label htmlFor="any" className="font-normal cursor-pointer">
-              Any
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="weekdays" id="weekdays" />
-            <Label htmlFor="weekdays" className="font-normal cursor-pointer">
-              Weekdays
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="weekend" id="weekend" />
-            <Label htmlFor="weekend" className="font-normal cursor-pointer">
-              Weekend
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
-
       {/* Tattoo Idea */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="tattooIdea" className="text-base font-semibold">
@@ -370,54 +338,129 @@ const BookingFormContent = ({
       </div>
 
       {/* Upload Reference Photos */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Camera className="w-5 h-5" />
-          <Label htmlFor="photos" className="text-base font-semibold">
-            Upload Reference Photos (Max 5)
-          </Label>
+      <PhotoUpload
+        photos={uploadedPhotos}
+        onPhotoUpload={(files) => {
+          const remainingSlots = 5 - uploadedPhotos.length;
+          Array.from(files)
+            .slice(0, remainingSlots)
+            .forEach((file) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const result = reader.result as string;
+                setUploadedPhotos((prev) => [...prev, result]);
+              };
+              reader.readAsDataURL(file);
+            });
+        }}
+        onPhotoRemove={(index) => {
+          setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+        }}
+        maxPhotos={5}
+        label="Upload Reference Photos (Max 5)"
+      />
+
+      {/* Consultation Type Selection */}
+      <div className="flex flex-col gap-3">
+        <Label className="text-base font-semibold">Consultation Type</Label>
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setValue("consultationType", "online")}
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+              consultationType === "online"
+                ? "border-foreground bg-muted"
+                : "border-input bg-background"
+            }`}
+          >
+            <Video className="w-6 h-6" />
+            <span className="text-sm font-medium">ONLINE CONSULTATION</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setValue("consultationType", "in-person")}
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+              consultationType === "in-person"
+                ? "border-foreground bg-muted"
+                : "border-input bg-background"
+            }`}
+          >
+            <Users className="w-6 h-6" />
+            <span className="text-sm font-medium">IN-PERSON</span>
+          </button>
         </div>
         <input
-          id="photos"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handlePhotoUpload}
-          disabled={uploadedPhotos.length >= 5}
-          className="hidden"
+          type="hidden"
+          {...register("consultationType", {
+            required: "Please select a consultation type",
+          })}
         />
-        <label
-          htmlFor="photos"
-          className="flex items-center justify-center w-full h-32 border-2 border-dashed border-input rounded-md cursor-pointer hover:border-primary transition-colors"
-        >
-          <div className="text-center">
-            <Camera className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm text-muted-foreground">
-              Click to upload photos
-            </p>
-          </div>
-        </label>
-        {uploadedPhotos.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
-            {uploadedPhotos.map((photo, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={photo}
-                  alt={`Reference ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(index)}
-                  className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+        {errors.consultationType && (
+          <p className="text-sm text-destructive">
+            {errors.consultationType.message}
+          </p>
         )}
       </div>
+
+      {/* Calendar */}
+      <DatePicker
+        selectedDate={selectedDate}
+        onDateSelect={(dateStr) =>
+          setValue("selectedDate", dateStr, { shouldValidate: true })
+        }
+      />
+      <input
+        type="hidden"
+        {...register("selectedDate", {
+          required: "Please select a date",
+        })}
+      />
+      {errors.selectedDate && (
+        <p className="text-sm text-destructive">
+          {errors.selectedDate.message}
+        </p>
+      )}
+
+      {/* Selected Date Display */}
+      {selectedDate && (
+        <div className="flex flex-col gap-2">
+          <Label className="text-base font-semibold">
+            Selected Date -{" "}
+            {(() => {
+              const [year, month, day] = selectedDate.split("-").map(Number);
+              const date = new Date(year, month - 1, day);
+              return date.toLocaleDateString("default", {
+                month: "long",
+                day: "numeric",
+              });
+            })()}
+          </Label>
+        </div>
+      )}
+
+      {/* Time Slot Selection */}
+      {selectedDate && (
+        <>
+          <TimeSlotSelector
+            timeSlots={timeSlots}
+            selectedTime={selectedTime}
+            onTimeSelect={(time) =>
+              setValue("selectedTime", time, { shouldValidate: true })
+            }
+          />
+          <input
+            type="hidden"
+            {...register("selectedTime", {
+              required: "Please select a time slot",
+            })}
+          />
+          {errors.selectedTime && (
+            <p className="text-sm text-destructive">
+              {errors.selectedTime.message}
+            </p>
+          )}
+        </>
+      )}
 
       {/* Submit Button */}
       <Button
@@ -426,7 +469,7 @@ const BookingFormContent = ({
         className="w-full rounded-full"
         size="lg"
       >
-        {isSubmitting ? "Submitting..." : "Submit Booking Request"}
+        {isSubmitting ? "Submitting..." : "Click Here to Confirm"}
       </Button>
     </form>
   );
