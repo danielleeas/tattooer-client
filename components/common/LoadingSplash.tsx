@@ -59,13 +59,13 @@ export function LoadingSplash({
 
   return (
     <div
-      className={`min-h-screen bg-background transition-all duration-300 ease-in-out flex items-center justify-center overflow-hidden absolute top-0 left-0 w-full h-full z-50 ${
+      className={`min-h-screen bg-background transition-all duration-1000 ease-in-out flex items-center justify-center overflow-hidden absolute top-0 left-0 w-full h-full z-50 ${
         animationPhase === "complete" ? "opacity-0" : "opacity-100"
       }`}
     >
       <div
         className={`bg-black absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140px] h-[140px] rounded-2xl flex items-center justify-center transition-all duration-1000 ease-in-out ${
-          animationPhase === "showImage" ? "bg-transparent" : ""
+          animationPhase === "showImage" ? "hidden" : ""
         }`}
       >
         <div
@@ -87,7 +87,7 @@ export function LoadingSplash({
             ? "w-24 h-0"
             : animationPhase === "phase1"
             ? "w-24 h-full"
-            : "w-full h-full opacity-0"
+            : "w-[600px] h-full opacity-0 border-r-20 border-l-20"
         }`}
       ></div>
 
