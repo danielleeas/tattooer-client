@@ -23,7 +23,7 @@ export function ActionLinkButton({
     <Link
       href={href}
       className={cn(
-        "flex flex-col items-center gap-2 group transition-opacity hover:opacity-80",
+        "flex flex-col items-center gap-2 group transition-opacity hover:opacity-80 cursor-pointer",
         className
       )}
     >
