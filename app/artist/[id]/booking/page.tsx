@@ -47,7 +47,8 @@ export default async function BookingPage({
 
   return (
     <BookingClient
-      artistId={id}
+      artistId={artist.id}
+      artistName={id}
       artist={artist}
       locations={locations}
       error={error}
