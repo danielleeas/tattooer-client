@@ -52,6 +52,15 @@ export function FlashesClient({
 
   const basePath = `/artist/${artistId}`;
 
+  // Extract watermark settings from artist app data
+  const watermark = artist?.app ? {
+    enabled: artist.app.watermark_enabled || false,
+    image: artist.app.watermark_image,
+    opacity: artist.app.watermark_opacity,
+    position: artist.app.watermark_position,
+    text: artist.app.watermark_text,
+  } : null;
+
   return (
     <>
       <div className="min-h-screen bg-background flex flex-col w-full px-4 py-6 gap-8">
@@ -67,7 +76,7 @@ export function FlashesClient({
         />
 
         {/* Flash Grid */}
-        <FlashGrid flashes={flashes} onFlashClick={handleFlashClick} />
+        <FlashGrid flashes={flashes} onFlashClick={handleFlashClick} watermark={watermark} />
       </div>
 
       {/* Flash Drawer */}
@@ -75,6 +84,7 @@ export function FlashesClient({
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         flash={selectedFlash}
+        watermark={watermark}
       />
     </>
   );

@@ -1,5 +1,14 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { WatermarkOverlay } from "../common/WatermarkOverlay";
+
+interface WatermarkSettings {
+  enabled: boolean;
+  image?: string | null;
+  opacity?: number | null;
+  position?: string | null;
+  text?: string | null;
+}
 
 interface FlashCardProps {
   image: string | null;
@@ -8,6 +17,7 @@ interface FlashCardProps {
   className?: string;
   onClick?: () => void;
   onImageClick?: () => void;
+  watermark?: WatermarkSettings | null;
 }
 
 export function FlashCard({
@@ -17,6 +27,7 @@ export function FlashCard({
   className,
   onClick,
   onImageClick,
+  watermark,
 }: FlashCardProps) {
   return (
     <div
@@ -42,6 +53,10 @@ export function FlashCard({
           <span className="text-muted-foreground">No image</span>
         </div>
       )}
+
+      {/* Watermark Overlay */}
+      <WatermarkOverlay watermark={watermark || null} />
+
       <div
         className={`absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent ${
           onImageClick ? "pointer-events-none" : ""

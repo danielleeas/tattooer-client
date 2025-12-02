@@ -8,12 +8,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
+import { WatermarkOverlay } from "./WatermarkOverlay";
+
+interface WatermarkSettings {
+  enabled: boolean;
+  image?: string | null;
+  opacity?: number | null;
+  position?: string | null;
+  text?: string | null;
+}
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   imageUrl: string | null;
   alt?: string;
+  watermark?: WatermarkSettings | null;
 }
 
 export function ImagePreviewModal({
@@ -21,22 +31,26 @@ export function ImagePreviewModal({
   onClose,
   imageUrl,
   alt = "Image preview",
+  watermark,
 }: ImagePreviewModalProps) {
   if (!imageUrl) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTitle />
-      <DialogContent className="max-w-[390px] h-[480px] p-0 bg-black/95 border-0">
-        <div className="relative w-full h-full flex items-center justify-center">
+      <DialogContent className="p-0 bg-black/95 border-0 w-auto h-auto max-w-[90vw] max-h-[90vh] rounded-2xl">
+        <div className="relative">
           <Image
             src={imageUrl}
             alt={alt}
-            fill
-            className="object-contain max-h-[90vh] max-w-[90vw]"
+            width={800}
+            height={800}
+            className="h-auto w-auto max-w-[70vw] max-h-[90vh] object-contain"
             onClick={onClose}
             style={{ cursor: "zoom-out" }}
           />
+          {/* Optional watermark overlay (used for Flash previews) */}
+          {watermark && <WatermarkOverlay watermark={watermark} />}
         </div>
       </DialogContent>
       <DialogClose asChild>

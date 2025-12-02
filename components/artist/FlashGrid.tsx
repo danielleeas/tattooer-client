@@ -4,16 +4,26 @@ import type { Database } from "@/types/supabase";
 
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 
+interface WatermarkSettings {
+  enabled: boolean;
+  image?: string | null;
+  opacity?: number | null;
+  position?: string | null;
+  text?: string | null;
+}
+
 interface FlashGridProps {
   flashes: Flash[];
   className?: string;
   onFlashClick?: (flash: Flash) => void;
+  watermark?: WatermarkSettings | null;
 }
 
 export function FlashGrid({
   flashes,
   className,
   onFlashClick,
+  watermark,
 }: FlashGridProps) {
   if (flashes.length === 0) {
     return (
@@ -36,6 +46,7 @@ export function FlashGrid({
           onClick={() => {
             onFlashClick?.(flash);
           }}
+          watermark={watermark}
         />
       ))}
     </div>
