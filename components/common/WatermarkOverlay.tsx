@@ -69,9 +69,12 @@ export function WatermarkOverlay({ watermark }: WatermarkOverlayProps) {
           className="absolute text-white font-semibold select-none whitespace-nowrap"
           style={{
             top: `${topPercent}%`,
-            left: "-30%",
-            transform: "rotate(-28deg)",
+            left: "-80%",
+            transform: "rotate(-33deg)",
             transformOrigin: "center",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.8)",
+            letterSpacing: 2,
+            opacity: 0.3,
           }}
         >
           {Array.from({ length: repeatPerLine }).map((_, wordIndex) => (
