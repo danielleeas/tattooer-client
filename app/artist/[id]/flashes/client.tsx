@@ -8,10 +8,13 @@ import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
 
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
+type Artist = Database["public"]["Tables"]["artists"]["Row"] & {
+  app: Database["public"]["Tables"]["apps"]["Row"] | null;
+};
 
 interface FlashesClientProps {
   artistId: string;
-  artist: Database["public"]["Tables"]["artists"]["Row"] | null;
+  artist: Artist | null;
   flashes: Flash[];
   error: string | null;
 }
@@ -52,14 +55,18 @@ export function FlashesClient({
 
   const basePath = `/artist/${artistId}`;
 
+  console.log(artist);
+
   // Extract watermark settings from artist app data
-  const watermark = artist?.app ? {
-    enabled: artist.app.watermark_enabled || false,
-    image: artist.app.watermark_image,
-    opacity: artist.app.watermark_opacity,
-    position: artist.app.watermark_position,
-    text: artist.app.watermark_text,
-  } : null;
+  const watermark = artist?.app
+    ? {
+        enabled: artist.app.watermark_enabled || false,
+        image: artist.app.watermark_image,
+        opacity: artist.app.watermark_opacity,
+        position: artist.app.watermark_position,
+        text: artist.app.watermark_text,
+      }
+    : null;
 
   return (
     <>
@@ -76,7 +83,11 @@ export function FlashesClient({
         />
 
         {/* Flash Grid */}
-        <FlashGrid flashes={flashes} onFlashClick={handleFlashClick} watermark={watermark} />
+        <FlashGrid
+          flashes={flashes}
+          onFlashClick={handleFlashClick}
+          watermark={watermark}
+        />
       </div>
 
       {/* Flash Drawer */}
