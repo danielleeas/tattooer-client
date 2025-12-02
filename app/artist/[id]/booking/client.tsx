@@ -299,9 +299,7 @@ const BookingFormContent = ({
           id="phoneNumber"
           type="tel"
           placeholder="+1 (555) 123-4567"
-          {...register("phoneNumber", {
-            required: "Phone number is required",
-          })}
+          {...register("phoneNumber")}
           className="bg-background border-input"
         />
         {errors.phoneNumber && (
