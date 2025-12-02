@@ -5,9 +5,18 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { FlashCard } from "./FlashCard";
-import Image from "next/image";
 import { Button } from "../ui/button";
 import { SectionHeader } from "../common/SectionHeader";
+import { ImagePreviewModal } from "../common/ImagePreviewModal";
+import { useState } from "react";
+
+interface WatermarkSettings {
+  enabled: boolean;
+  image?: string | null;
+  opacity?: number | null;
+  position?: string | null;
+  text?: string | null;
+}
 
 interface FlashDrawerProps {
   isOpen: boolean;
@@ -19,9 +28,16 @@ interface FlashDrawerProps {
     flash_price: number;
     repeatable: boolean;
   } | null;
+  watermark?: WatermarkSettings | null;
 }
 
-export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
+export function FlashDrawer({ isOpen, onClose, flash, watermark }: FlashDrawerProps) {
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const handleImageClick = () => {
+    setIsPreviewModalOpen(true);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
@@ -50,6 +66,8 @@ export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
                 name={flash.flash_name}
                 price={flash.flash_price}
                 className="w-[200px] h-[250px]"
+                onImageClick={handleImageClick}
+                watermark={watermark}
               />
             </div>
           )}
@@ -85,6 +103,15 @@ export function FlashDrawer({ isOpen, onClose, flash }: FlashDrawerProps) {
           </div>
         </div>
       </DialogContent>
+
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        imageUrl={flash?.flash_image || null}
+        alt={flash?.flash_name || "Flash preview"}
+        watermark={watermark || null}
+      />
     </Dialog>
   );
 }

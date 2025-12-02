@@ -12,6 +12,10 @@ interface LoadingSplashProps {
   instagramHandle?: string;
 }
 
+// Tracks if the loading splash has been shown during the current app lifetime.
+// This resets when the user does a full reload (F5).
+let hasShownLoadingSplash = false;
+
 export function LoadingSplash({
   message,
   className = "",
@@ -21,11 +25,12 @@ export function LoadingSplash({
   instagramHandle = "artist",
 }: LoadingSplashProps) {
   const [animationPhase, setAnimationPhase] = useState<
-    "initial" | "phase1" | "phase2" | "showImage" | "complete"
+    "initial" | "phase1" | "phase2" | "showImage" | "complete" | "hide"
   >("initial");
 
   useEffect(() => {
-    if (!isStartAnimation) {
+    // Don't run animation if it's disabled or has already been shown
+    if (!isStartAnimation || hasShownLoadingSplash) {
       return;
     }
 
@@ -49,23 +54,45 @@ export function LoadingSplash({
       setAnimationPhase("complete");
     }, 6000); // 3 seconds for image + 3 seconds total animation time
 
+    const timer5 = setTimeout(() => {
+      setAnimationPhase("hide");
+      // Mark as shown so subsequent mounts during this session won't show it again
+      hasShownLoadingSplash = true;
+    }, 6300); // 3 seconds for image + 3 seconds total animation time + 300ms buffer
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
       clearTimeout(timer4);
+      clearTimeout(timer5);
     };
-  }, [isStartAnimation]);
+  }, []);
+
+  // If we've already shown the splash in this app lifetime, render nothing
+  if (hasShownLoadingSplash) {
+    return null;
+  }
 
   return (
     <div
-      className={`min-h-screen bg-background transition-all duration-300 ease-in-out flex items-center justify-center overflow-hidden absolute top-0 left-0 w-full h-full z-50 ${
-        animationPhase === "complete" ? "opacity-0" : "opacity-100"
+      className={`min-h-screen bg-background transition-all duration-1000 ease-in-out flex items-center justify-center overflow-hidden fixed inset-0 z-50 ${
+        animationPhase === "complete"
+          ? "opacity-0"
+          : animationPhase === "hide"
+          ? "hidden"
+          : "opacity-100"
       }`}
     >
+      {/* Horizontal mask inside the splash: cover sides, leave 390px center uncovered */}
+      <div className="pointer-events-none absolute inset-0 z-50">
+        <div className="absolute left-0 top-0 bottom-0 w-[calc(50vw-250px)] bg-background" />
+        <div className="absolute right-0 top-0 bottom-0 w-[calc(50vw-250px)] bg-background" />
+      </div>
+
       <div
-        className={`bg-black absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140px] h-[140px] rounded-2xl flex items-center justify-center transition-all duration-1000 ease-in-out ${
-          animationPhase === "showImage" ? "bg-transparent" : ""
+        className={`bg-black fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140px] h-[140px] rounded-2xl flex items-center justify-center transition-all duration-1000 ease-in-out ${
+          animationPhase === "showImage" ? "hidden" : ""
         }`}
       >
         <div
@@ -82,12 +109,12 @@ export function LoadingSplash({
         </div>
       </div>
       <div
-        className={`border-r-2 border-l-2 border-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out ${
+        className={`border-r-2 border-l-2 border-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out ${
           animationPhase === "initial"
             ? "w-24 h-0"
             : animationPhase === "phase1"
             ? "w-24 h-full"
-            : "w-full h-full opacity-0"
+            : "w-[600px] h-full opacity-0 border-r-20 border-l-20"
         }`}
       ></div>
 

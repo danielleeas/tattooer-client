@@ -1,10 +1,7 @@
 import { getBaseUrl, joinUrl } from "@/lib/utils";
 import { getArtistByBookingLink, getArtistPortfolios } from "@/lib/api/artist";
-import { BackButton } from "@/components/artist/BackButton";
-import { PortfolioHeader } from "@/components/artist/PortfolioHeader";
-import { PortfolioGrid } from "@/components/artist/PortfolioGrid";
+import { PortfolioClient } from "./client";
 import type { Database } from "@/types/supabase";
-import { SectionHeader } from "@/components/common/SectionHeader";
 
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 
@@ -48,25 +45,5 @@ export default async function PortfolioPage({
     );
   }
 
-  const basePath = `/artist/${id}`;
-
-  console.log(portfolios);
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col w-full px-4 py-6 gap-8">
-      {/* Back Button */}
-      <BackButton href={basePath} />
-
-      {/* Portfolio Header */}
-      <SectionHeader
-        icon="/assets/images/icons/portfolio.png"
-        title="Portfolio"
-        description="Take A Browse Through My Work For Inspiration!"
-        className="px-10 h-[180px]"
-      />
-
-      {/* Portfolio Grid */}
-      <PortfolioGrid portfolios={portfolios} />
-    </div>
-  );
+  return <PortfolioClient portfolios={portfolios} artistId={id} />;
 }

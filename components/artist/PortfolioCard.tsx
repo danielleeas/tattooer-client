@@ -4,15 +4,15 @@ import Image from "next/image";
 interface PortfolioCardProps {
   image: string | null;
   name: string | null;
-  description?: string | null;
   className?: string;
+  onClick?: () => void;
 }
 
 export function PortfolioCard({
   image,
   name,
-  description,
   className,
+  onClick,
 }: PortfolioCardProps) {
   return (
     <div
@@ -20,11 +20,11 @@ export function PortfolioCard({
         "relative rounded-xl overflow-hidden group cursor-pointer w-[174px] h-[216px]",
         className
       )}
+      onClick={onClick}
     >
       {image ? (
         <Image
-          // src={image}
-          src="/assets/images/flashs/flash1.png"
+          src={image}
           alt={name || "Portfolio item"}
           fill
           className="object-cover transition-transform group-hover:scale-105"

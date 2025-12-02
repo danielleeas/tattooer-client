@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { BackButton } from "@/components/artist/BackButton";
-import { FlashHeader } from "@/components/artist/FlashHeader";
 import { FlashGrid } from "@/components/artist/FlashGrid";
 import { FlashDrawer } from "@/components/artist/FlashDrawer";
 import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
 
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
+type Artist = Database["public"]["Tables"]["artists"]["Row"] & {
+  app: Database["public"]["Tables"]["apps"]["Row"] | null;
+};
 
 interface FlashesClientProps {
   artistId: string;
-  artist: Database["public"]["Tables"]["artists"]["Row"] | null;
+  artist: Artist | null;
   flashes: Flash[];
   error: string | null;
 }
@@ -53,6 +55,19 @@ export function FlashesClient({
 
   const basePath = `/artist/${artistId}`;
 
+  console.log(artist);
+
+  // Extract watermark settings from artist app data
+  const watermark = artist?.app
+    ? {
+        enabled: artist.app.watermark_enabled || false,
+        image: artist.app.watermark_image,
+        opacity: artist.app.watermark_opacity,
+        position: artist.app.watermark_position,
+        text: artist.app.watermark_text,
+      }
+    : null;
+
   return (
     <>
       <div className="min-h-screen bg-background flex flex-col w-full px-4 py-6 gap-8">
@@ -68,7 +83,11 @@ export function FlashesClient({
         />
 
         {/* Flash Grid */}
-        <FlashGrid flashes={flashes} onFlashClick={handleFlashClick} />
+        <FlashGrid
+          flashes={flashes}
+          onFlashClick={handleFlashClick}
+          watermark={watermark}
+        />
       </div>
 
       {/* Flash Drawer */}
@@ -76,6 +95,7 @@ export function FlashesClient({
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         flash={selectedFlash}
+        watermark={watermark}
       />
     </>
   );

@@ -4,7 +4,9 @@ import { FlashesClient } from "./client";
 import type { Database } from "@/types/supabase";
 
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
-
+type Artist = Database["public"]["Tables"]["artists"]["Row"] & {
+  app: Database["public"]["Tables"]["apps"]["Row"] | null;
+};
 export default async function FlashesPage({
   params,
 }: {

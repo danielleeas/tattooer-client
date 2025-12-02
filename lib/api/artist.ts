@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 
-type Artist = Database["public"]["Tables"]["artists"]["Row"];
+type Artist = Database["public"]["Tables"]["artists"]["Row"] & {
+  app: Database["public"]["Tables"]["apps"]["Row"] | null;
+};
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 type FAQCategory = Database["public"]["Tables"]["faq_categories"]["Row"];

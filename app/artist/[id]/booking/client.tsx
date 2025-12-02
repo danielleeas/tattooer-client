@@ -7,6 +7,8 @@ import {
   UseFormHandleSubmit,
   UseFormSetValue,
   FieldErrors,
+  Controller,
+  Control,
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ import {
 import Image from "next/image";
 
 interface BookingClientProps {
+  artistName: string;
   artistId: string;
   artist: Database["public"]["Tables"]["artists"]["Row"] | null;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
@@ -46,16 +49,21 @@ interface BookingFormData {
 }
 
 export function BookingClient({
+  artistName,
   artistId,
   artist,
   locations,
   error,
 }: BookingClientProps) {
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<BookingFormData>({
@@ -84,26 +92,67 @@ export function BookingClient({
     if (!files) return;
 
     const remainingSlots = 5 - uploadedPhotos.length;
+    const filesArray = Array.from(files).slice(0, remainingSlots);
 
-    Array.from(files)
-      .slice(0, remainingSlots)
-      .forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          setUploadedPhotos((prev) => [...prev, result]);
-        };
-        reader.readAsDataURL(file);
-      });
+    // Store File objects for submission
+    setUploadedFiles((prev) => [...prev, ...filesArray]);
+
+    // Create preview URLs for display
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setUploadedPhotos((prev) => [...prev, result]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removePhoto = (index: number) => {
     setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: BookingFormData) => {
-    console.log("Form submitted:", data);
-    // TODO: Submit to API
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      const { submitBookingRequest } = await import("./actions");
+
+      // Create FormData for file uploads
+      const formData = new FormData();
+      formData.append("artistId", artistId);
+      formData.append("fullName", data.fullName);
+      formData.append("email", data.email);
+      formData.append("phoneNumber", data.phoneNumber);
+      formData.append("cityCountry", data.cityCountry);
+      formData.append("locationId", data.location);
+      formData.append("preferredDays", data.preferredDays);
+      formData.append("tattooIdea", data.tattooIdea);
+      formData.append("tattooType", data.tattooType);
+
+      // Append all photo files
+      uploadedFiles.forEach((file) => {
+        formData.append("photos", file);
+      });
+
+      const result = await submitBookingRequest(formData);
+
+      if (result.success) {
+        setSubmitSuccess(true);
+        // Optionally reset form or redirect
+      } else {
+        setSubmitError(result.error || "Failed to submit booking request");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit booking request"
+      );
+    }
   };
 
   if (error || !artist) {
@@ -121,7 +170,7 @@ export function BookingClient({
     );
   }
 
-  const basePath = `/artist/${artistId}`;
+  const basePath = `/artist/${artistName}`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col w-full px-4 py-6 gap-8">
@@ -145,6 +194,7 @@ export function BookingClient({
         register={register}
         handleSubmit={handleSubmit}
         setValue={setValue}
+        control={control}
         errors={errors}
         isSubmitting={isSubmitting}
         onSubmit={onSubmit}
@@ -155,6 +205,8 @@ export function BookingClient({
         preferredDays={preferredDays}
         location={location}
         tattooType={tattooType}
+        submitError={submitError}
+        submitSuccess={submitSuccess}
       />
     </div>
   );
@@ -164,6 +216,7 @@ interface BookingFormContentProps {
   register: UseFormRegister<BookingFormData>;
   handleSubmit: UseFormHandleSubmit<BookingFormData>;
   setValue: UseFormSetValue<BookingFormData>;
+  control: Control<BookingFormData>;
   errors: FieldErrors<BookingFormData>;
   isSubmitting: boolean;
   onSubmit: (data: BookingFormData) => void;
@@ -174,12 +227,15 @@ interface BookingFormContentProps {
   preferredDays: "any" | "weekdays" | "weekend";
   location: string;
   tattooType: "coverup" | "addon" | "between" | "";
+  submitError: string | null;
+  submitSuccess: boolean;
 }
 
 const BookingFormContent = ({
   register,
   handleSubmit,
   setValue,
+  control,
   errors,
   isSubmitting,
   onSubmit,
@@ -190,6 +246,8 @@ const BookingFormContent = ({
   preferredDays,
   location,
   tattooType,
+  submitError,
+  submitSuccess,
 }: BookingFormContentProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -241,9 +299,7 @@ const BookingFormContent = ({
           id="phoneNumber"
           type="tel"
           placeholder="+1 (555) 123-4567"
-          {...register("phoneNumber", {
-            required: "Phone number is required",
-          })}
+          {...register("phoneNumber")}
           className="bg-background border-input"
         />
         {errors.phoneNumber && (
@@ -415,11 +471,19 @@ const BookingFormContent = ({
       {/* Legal Checkboxes */}
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="legalAge"
-            {...register("legalAge", {
+          <Controller
+            name="legalAge"
+            control={control}
+            rules={{
               required: "You must confirm you are of legal age to get tattooed",
-            })}
+            }}
+            render={({ field }) => (
+              <Checkbox
+                id="legalAge"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
           <Label
             htmlFor="legalAge"
@@ -433,11 +497,19 @@ const BookingFormContent = ({
         )}
 
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="agreeToPolicies"
-            {...register("agreeToPolicies", {
+          <Controller
+            name="agreeToPolicies"
+            control={control}
+            rules={{
               required: "You must agree to the policies to continue",
-            })}
+            }}
+            render={({ field }) => (
+              <Checkbox
+                id="agreeToPolicies"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
           <Label
             htmlFor="agreeToPolicies"
@@ -453,14 +525,35 @@ const BookingFormContent = ({
         )}
       </div>
 
+      {/* Error Message */}
+      {submitError && (
+        <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
+          <p className="text-sm text-destructive">{submitError}</p>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {submitSuccess && (
+        <div className="p-4 bg-green-500/10 border border-green-500 rounded-md">
+          <p className="text-sm text-green-700 dark:text-green-400">
+            Booking request submitted successfully! We&apos;ll get back to you
+            soon.
+          </p>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || submitSuccess}
         className="w-full rounded-full"
         size="lg"
       >
-        {isSubmitting ? "Loading..." : "Looks Good — Continue"}
+        {isSubmitting
+          ? "Submitting..."
+          : submitSuccess
+          ? "Submitted!"
+          : "Looks Good — Continue"}
       </Button>
     </form>
   );
