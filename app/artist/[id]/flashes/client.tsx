@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { BackButton } from "@/components/artist/BackButton";
-import { FlashHeader } from "@/components/artist/FlashHeader";
 import { FlashGrid } from "@/components/artist/FlashGrid";
 import { FlashDrawer } from "@/components/artist/FlashDrawer";
 import type { Database } from "@/types/supabase";

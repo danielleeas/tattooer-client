@@ -7,9 +7,14 @@ type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 interface PortfolioGridProps {
   portfolios: Portfolio[];
   className?: string;
+  onPortfolioClick?: (portfolio: Portfolio) => void;
 }
 
-export function PortfolioGrid({ portfolios, className }: PortfolioGridProps) {
+export function PortfolioGrid({
+  portfolios,
+  className,
+  onPortfolioClick,
+}: PortfolioGridProps) {
   if (portfolios.length === 0) {
     return (
       <div className={cn("text-center py-12", className)}>
@@ -21,21 +26,15 @@ export function PortfolioGrid({ portfolios, className }: PortfolioGridProps) {
   }
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-2 gap-4 w-full",
-        className
-      )}
-    >
+    <div className={cn("grid grid-cols-2 gap-4 w-full", className)}>
       {portfolios.map((portfolio) => (
         <PortfolioCard
           key={portfolio.id}
           image={portfolio.portfolio_image}
           name={portfolio.portfolio_name}
-          description={portfolio.portfolio_description}
+          onClick={() => onPortfolioClick?.(portfolio)}
         />
       ))}
     </div>
   );
 }
-

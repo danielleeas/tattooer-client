@@ -33,7 +33,9 @@ export function FlashGrid({
           image={flash.flash_image}
           name={flash.flash_name}
           price={flash.flash_price}
-          onClick={() => onFlashClick?.(flash)}
+          onClick={() => {
+            onFlashClick?.(flash);
+          }}
         />
       ))}
     </div>

@@ -6,3 +6,4 @@ export { TattooTypeSelectModal } from "./TattooTypeSelectModal";
 export { TimeAccordion } from "./TimeAccordion";
 export { LoadingSplash } from "./LoadingSplash";
 export { ArtistNotFound } from "./ArtistNotFound";
+export { ImagePreviewModal } from "./ImagePreviewModal";
