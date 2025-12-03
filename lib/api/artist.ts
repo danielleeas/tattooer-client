@@ -183,6 +183,29 @@ export async function getArtistLocations(
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
+/**
+ * Fetch all blocking events (book_off and mark_unavailable) for an artist
+ * These events are used to disable entire dates on the calendar
+ */
+export async function getArtistBlockingEvents(
+  artistId: string
+): Promise<Event[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("artist_id", artistId)
+    .in("source", ["book_off", "mark_unavailable"]);
+
+  if (error) {
+    console.error("[getArtistBlockingEvents] Supabase error:", error);
+    throw new Error(`Failed to fetch blocking events: ${error.message}`);
+  }
+
+  return data || [];
+}
+
 export async function getArtistEventsForDates(
   artistId: string,
   dates: string[]
@@ -247,7 +270,7 @@ export async function getArtistEventsForDates(
       if (isNaN(eventStart.getTime()) || isNaN(eventEnd.getTime())) {
         return false;
       }
-    } catch (_error) {
+    } catch {
       return false;
     }
 

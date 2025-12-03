@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Database } from "@/types/supabase";
+
+type Event = Database["public"]["Tables"]["events"]["Row"];
 
 interface DatePickerProps {
   selectedDates?: string[];
@@ -9,6 +12,7 @@ interface DatePickerProps {
   isMultiple?: boolean;
   isDateAvailable?: (date: Date) => boolean;
   workDays?: string[]; // Array of day abbreviations: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+  events?: Event[]; // Events to check for book_off and mark_unavailable
   className?: string;
 }
 
@@ -24,20 +28,78 @@ const DAY_ABBREV_TO_NUMBER: Record<string, number> = {
 };
 
 // Default availability function - no weekends and no past dates
-const defaultIsDateAvailable = (date: Date) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+const createDefaultAvailability = (events?: Event[]) => {
+  return (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // Don't allow past dates
-  if (date < today) return false;
+    // Don't allow past dates
+    if (date < today) return false;
 
-  const dayOfWeek = date.getDay();
-  // Make weekends unavailable (you can customize this based on availability)
-  return dayOfWeek !== 0 && dayOfWeek !== 6;
+    // Check if date has blocking events (book_off or mark_unavailable)
+    if (events && hasBlockingEvents(date, events)) return false;
+
+    const dayOfWeek = date.getDay();
+    // Make weekends unavailable (you can customize this based on availability)
+    return dayOfWeek !== 0 && dayOfWeek !== 6;
+  };
+};
+
+// Check if a date has any blocking events (book_off or mark_unavailable)
+const hasBlockingEvents = (date: Date, events: Event[]): boolean => {
+  if (!events || events.length === 0) return false;
+
+  // Format date as YYYY-MM-DD
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(date.getDate()).padStart(2, "0")}`;
+
+  // Parse date range for comparison
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const dateStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const dateEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+  return events.some((event) => {
+    // Only check book_off and mark_unavailable events
+    if (event.source !== "book_off" && event.source !== "mark_unavailable") {
+      return false;
+    }
+
+    // Parse event dates
+    let eventStart: Date, eventEnd: Date;
+    try {
+      const startStr = event.start_date;
+      const endStr = event.end_date;
+
+      if (typeof startStr === "string" && startStr.includes(" ")) {
+        const [datePart, timePart] = startStr.split(" ");
+        const [y, m, d] = datePart.split("-").map(Number);
+        const [h, min] = timePart.split(":").map(Number);
+        eventStart = new Date(y, m - 1, d, h, min);
+      } else {
+        eventStart = new Date(startStr);
+      }
+
+      if (typeof endStr === "string" && endStr.includes(" ")) {
+        const [datePart, timePart] = endStr.split(" ");
+        const [y, m, d] = datePart.split("-").map(Number);
+        const [h, min] = timePart.split(":").map(Number);
+        eventEnd = new Date(y, m - 1, d, h, min);
+      } else {
+        eventEnd = new Date(endStr);
+      }
+    } catch {
+      return false;
+    }
+
+    // Check if event overlaps with the date
+    return eventStart <= dateEnd && eventEnd >= dateStart;
+  });
 };
 
 // Create availability function based on work days
-const createWorkDaysAvailability = (workDays: string[]) => {
+const createWorkDaysAvailability = (workDays: string[], events?: Event[]) => {
   const workDayNumbers = new Set(
     workDays
       .map((day) => DAY_ABBREV_TO_NUMBER[day.toLowerCase()])
@@ -51,6 +113,9 @@ const createWorkDaysAvailability = (workDays: string[]) => {
     // Don't allow past dates
     if (date < today) return false;
 
+    // Check if date has blocking events (book_off or mark_unavailable)
+    if (events && hasBlockingEvents(date, events)) return false;
+
     // Check if the date's day of week is in the work days
     const dayOfWeek = date.getDay();
     return workDayNumbers.has(dayOfWeek);
@@ -63,6 +128,7 @@ export function DatePicker({
   isMultiple = false,
   isDateAvailable,
   workDays,
+  events,
   className = "",
 }: DatePickerProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -70,13 +136,17 @@ export function DatePicker({
   // Memoize availability function to prevent unnecessary recalculations
   const availabilityFunction = useMemo(() => {
     if (isDateAvailable) {
-      return isDateAvailable;
+      // If custom function provided, wrap it to also check blocking events
+      return (date: Date) => {
+        if (!isDateAvailable(date)) return false;
+        return !hasBlockingEvents(date, events || []);
+      };
     }
     if (workDays && workDays.length > 0) {
-      return createWorkDaysAvailability(workDays);
+      return createWorkDaysAvailability(workDays, events);
     }
-    return defaultIsDateAvailable;
-  }, [isDateAvailable, workDays]);
+    return createDefaultAvailability(events);
+  }, [isDateAvailable, workDays, events]);
 
   // Parse selected date safely to avoid timezone issues
   const parseSelectedDate = (dateStr: string) => {

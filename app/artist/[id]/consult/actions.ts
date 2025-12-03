@@ -2,7 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createConsultRequest } from "@/lib/api/book-consult";
-import { getArtistEventsForDates } from "@/lib/api/artist";
+import {
+  getArtistEventsForDates,
+  getArtistBlockingEvents,
+} from "@/lib/api/artist";
 import type { Database } from "@/types/supabase";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
@@ -130,6 +133,15 @@ export async function fetchEventsForDates(
     return await getArtistEventsForDates(artistId, dates);
   } catch (error) {
     console.error("Error fetching events:", error);
+    return [];
+  }
+}
+
+export async function fetchBlockingEvents(artistId: string): Promise<Event[]> {
+  try {
+    return await getArtistBlockingEvents(artistId);
+  } catch (error) {
+    console.error("Error fetching blocking events:", error);
     return [];
   }
 }

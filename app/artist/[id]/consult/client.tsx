@@ -69,6 +69,9 @@ export function ConsultClient({
   const [events, setEvents] = useState<
     Database["public"]["Tables"]["events"]["Row"][]
   >([]);
+  const [blockingEvents, setBlockingEvents] = useState<
+    Database["public"]["Tables"]["events"]["Row"][]
+  >([]);
   const {
     register,
     handleSubmit,
@@ -153,6 +156,24 @@ export function ConsultClient({
     }
   }, [artist, setValue]);
 
+  // Fetch blocking events (book_off and mark_unavailable) on mount
+  useEffect(() => {
+    const fetchBlockingEvents = async () => {
+      try {
+        const { fetchBlockingEvents } = await import("./actions");
+        const fetchedBlockingEvents = await fetchBlockingEvents(artistId);
+        setBlockingEvents(fetchedBlockingEvents);
+      } catch (error) {
+        console.error("Error fetching blocking events:", error);
+        setBlockingEvents([]);
+      }
+    };
+
+    if (artistId) {
+      fetchBlockingEvents();
+    }
+  }, [artistId]);
+
   // Fetch events when selected dates change
   useEffect(() => {
     const fetchEvents = async () => {
@@ -235,6 +256,7 @@ export function ConsultClient({
         submitError={submitError}
         submitSuccess={submitSuccess}
         events={events}
+        blockingEvents={blockingEvents}
         consultDuration={artist?.flow?.consult_duration || 60}
         breakTime={artist?.flow?.break_time || 0}
       />
@@ -262,6 +284,7 @@ interface ConsultFormContentProps {
   submitError: string | null;
   submitSuccess: boolean;
   events: Database["public"]["Tables"]["events"]["Row"][];
+  blockingEvents: Database["public"]["Tables"]["events"]["Row"][];
   consultDuration: number;
   breakTime: number;
 }
@@ -286,6 +309,7 @@ const ConsultFormContent = ({
   submitError,
   submitSuccess,
   events,
+  blockingEvents,
   consultDuration,
   breakTime,
 }: ConsultFormContentProps) => {
@@ -572,6 +596,7 @@ const ConsultFormContent = ({
         }}
         isMultiple={false}
         workDays={artist?.flow?.consult_work_days || undefined}
+        events={blockingEvents}
       />
 
       {/* Time Selection Accordion */}
