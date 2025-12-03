@@ -66,6 +66,9 @@ export function ConsultClient({
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [events, setEvents] = useState<
+    Database["public"]["Tables"]["events"]["Row"][]
+  >([]);
   const {
     register,
     handleSubmit,
@@ -141,8 +144,6 @@ export function ConsultClient({
     }
   };
 
-  console.log(artist);
-
   useEffect(() => {
     if (artist) {
       setValue(
@@ -150,7 +151,34 @@ export function ConsultClient({
         artist.flow?.consult_online ? "online" : "in-person"
       );
     }
-  }, [artist]);
+  }, [artist, setValue]);
+
+  // Fetch events when selected dates change
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const selectedDates = selectedDateTimes.map((dt) => dt.date);
+      if (selectedDates.length === 0) {
+        setEvents([]);
+        return;
+      }
+
+      try {
+        const { fetchEventsForDates } = await import("./actions");
+        const fetchedEvents = await fetchEventsForDates(
+          artistId,
+          selectedDates
+        );
+        setEvents(fetchedEvents);
+
+        console.log("fetchedEvents :: ", fetchedEvents);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
+      }
+    };
+
+    fetchEvents();
+  }, [selectedDateTimes, artistId]);
 
   if (error || !artist) {
     return (
@@ -206,6 +234,9 @@ export function ConsultClient({
         setUploadedFiles={setUploadedFiles}
         submitError={submitError}
         submitSuccess={submitSuccess}
+        events={events}
+        consultDuration={artist?.flow?.consult_duration || 60}
+        breakTime={artist?.flow?.break_time || 0}
       />
     </div>
   );
@@ -230,6 +261,9 @@ interface ConsultFormContentProps {
   setUploadedFiles: React.Dispatch<React.SetStateAction<File[]>>;
   submitError: string | null;
   submitSuccess: boolean;
+  events: Database["public"]["Tables"]["events"]["Row"][];
+  consultDuration: number;
+  breakTime: number;
 }
 
 const ConsultFormContent = ({
@@ -251,6 +285,9 @@ const ConsultFormContent = ({
   setUploadedFiles,
   submitError,
   submitSuccess,
+  events,
+  consultDuration,
+  breakTime,
 }: ConsultFormContentProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -544,6 +581,15 @@ const ConsultFormContent = ({
         onDateTimesSelect={(dateTimes) =>
           setValue("selectedDateTimes", dateTimes, { shouldValidate: true })
         }
+        consultStartTimes={
+          artist?.flow?.consult_start_times as
+            | Record<string, string[]>
+            | null
+            | undefined
+        }
+        events={events}
+        consultDuration={consultDuration}
+        breakTime={breakTime}
       />
       <input
         type="hidden"

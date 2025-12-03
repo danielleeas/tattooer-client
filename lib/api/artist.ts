@@ -71,8 +71,6 @@ export async function getArtistById(id: string): Promise<Artist | null> {
     .select("*")
     .eq("id", id);
 
-  console.log("data", data);
-
   if (error) {
     console.error("Supabase error:", error);
     throw new Error(`Failed to fetch artist data: ${error.message}`);
@@ -181,4 +179,101 @@ export async function getArtistLocations(
   }
 
   return data || [];
+}
+
+type Event = Database["public"]["Tables"]["events"]["Row"];
+
+export async function getArtistEventsForDates(
+  artistId: string,
+  dates: string[]
+): Promise<Event[]> {
+  if (!dates || dates.length === 0) {
+    return [];
+  }
+
+  const supabase = await createClient();
+
+  // Find the earliest and latest dates to create a range
+  const sortedDates = dates.sort();
+  const earliestDate = sortedDates[0];
+  const latestDate = sortedDates[sortedDates.length - 1];
+
+  // First fetch all events for the artist (can't filter by date since they're pure strings)
+  // We'll filter by date and type in JavaScript after fetching
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("artist_id", artistId)
+    .in("source", [
+      "book_off",
+      "session",
+      "block_time",
+      "quick_appointment",
+      "mark_unavailable",
+    ]);
+  // .eq("id", "4d4629df-6c79-410f-832f-80a3bc8494ef");
+  if (error) {
+    throw new Error(`Failed to fetch events: ${error.message}`);
+  }
+
+  // Filter events to only include those that:
+  // 1. Overlap with the selected date range (earliest to latest date)
+  // 2. Are of types that should block time slots
+  const filteredEvents = (data || []).filter((event) => {
+    // Try to parse the date strings (they appear to be in format "YYYY-MM-DD HH:mm")
+    let eventStart: Date, eventEnd: Date;
+    try {
+      // Parse as local time - split date and time parts
+      const [startDate, startTime] = event.start_date.split(" ");
+      const [endDate, endTime] = event.end_date.split(" ");
+
+      if (startDate && startTime) {
+        const [year, month, day] = startDate.split("-").map(Number);
+        const [hour, minute] = startTime.split(":").map(Number);
+        eventStart = new Date(year, month - 1, day, hour, minute);
+      } else {
+        eventStart = new Date(event.start_date);
+      }
+
+      if (endDate && endTime) {
+        const [year, month, day] = endDate.split("-").map(Number);
+        const [hour, minute] = endTime.split(":").map(Number);
+        eventEnd = new Date(year, month - 1, day, hour, minute);
+      } else {
+        eventEnd = new Date(event.end_date);
+      }
+
+      // Check if dates are valid
+      if (isNaN(eventStart.getTime()) || isNaN(eventEnd.getTime())) {
+        return false;
+      }
+    } catch (_error) {
+      return false;
+    }
+
+    // Create date range for comparison (earliest to latest selected date)
+    // Parse selected dates as local dates (YYYY-MM-DD format)
+    const [startYear, startMonth, startDay] = earliestDate
+      .split("-")
+      .map(Number);
+    const rangeStart = new Date(
+      startYear,
+      startMonth - 1,
+      startDay,
+      0,
+      0,
+      0,
+      0
+    );
+
+    const [endYear, endMonth, endDay] = latestDate.split("-").map(Number);
+    const rangeEnd = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+
+    // Check if event overlaps with the selected date range
+    const overlaps = eventStart <= rangeEnd && eventEnd >= rangeStart;
+
+    return overlaps;
+  });
+
+  return filteredEvents;
 }
