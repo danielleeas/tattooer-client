@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DatePickerProps {
@@ -8,8 +8,20 @@ interface DatePickerProps {
   onDatesSelect?: (dateStrs: string[]) => void;
   isMultiple?: boolean;
   isDateAvailable?: (date: Date) => boolean;
+  workDays?: string[]; // Array of day abbreviations: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
   className?: string;
 }
+
+// Map day abbreviations to JavaScript day numbers (0 = Sunday, 1 = Monday, etc.)
+const DAY_ABBREV_TO_NUMBER: Record<string, number> = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+};
 
 // Default availability function - no weekends and no past dates
 const defaultIsDateAvailable = (date: Date) => {
@@ -24,14 +36,47 @@ const defaultIsDateAvailable = (date: Date) => {
   return dayOfWeek !== 0 && dayOfWeek !== 6;
 };
 
+// Create availability function based on work days
+const createWorkDaysAvailability = (workDays: string[]) => {
+  const workDayNumbers = new Set(
+    workDays
+      .map((day) => DAY_ABBREV_TO_NUMBER[day.toLowerCase()])
+      .filter((num) => num !== undefined)
+  );
+
+  return (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Don't allow past dates
+    if (date < today) return false;
+
+    // Check if the date's day of week is in the work days
+    const dayOfWeek = date.getDay();
+    return workDayNumbers.has(dayOfWeek);
+  };
+};
+
 export function DatePicker({
   selectedDates = [],
   onDatesSelect,
   isMultiple = false,
-  isDateAvailable = defaultIsDateAvailable,
+  isDateAvailable,
+  workDays,
   className = "",
 }: DatePickerProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Memoize availability function to prevent unnecessary recalculations
+  const availabilityFunction = useMemo(() => {
+    if (isDateAvailable) {
+      return isDateAvailable;
+    }
+    if (workDays && workDays.length > 0) {
+      return createWorkDaysAvailability(workDays);
+    }
+    return defaultIsDateAvailable;
+  }, [isDateAvailable, workDays]);
 
   // Parse selected date safely to avoid timezone issues
   const parseSelectedDate = (dateStr: string) => {
@@ -83,7 +128,7 @@ export function DatePicker({
       currentMonth.getMonth(),
       day
     );
-    if (!isDateAvailable(date)) return;
+    if (!availabilityFunction(date)) return;
 
     const dateStr = `${currentMonth.getFullYear()}-${String(
       currentMonth.getMonth() + 1
@@ -185,7 +230,7 @@ export function DatePicker({
             currentMonth.getMonth(),
             day
           );
-          const isAvailable = isDateAvailable(date);
+          const isAvailable = availabilityFunction(date);
           const isSelected = isDateSelected(
             currentMonth.getFullYear(),
             currentMonth.getMonth(),

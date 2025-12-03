@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
+import type { ArtistInfo } from "@/types/artist";
 
-type Artist = Database["public"]["Tables"]["artists"]["Row"] & {
-  app: Database["public"]["Tables"]["apps"]["Row"] | null;
-};
+type Artist = Database["public"]["Tables"]["artists"]["Row"];
 type Portfolio = Database["public"]["Tables"]["artist_portfolios"]["Row"];
 type Flash = Database["public"]["Tables"]["artist_flashs"]["Row"];
 type FAQCategory = Database["public"]["Tables"]["faq_categories"]["Row"];
@@ -18,7 +17,7 @@ type Location = Database["public"]["Tables"]["locations"]["Row"];
  */
 export async function getArtistByBookingLink(
   bookingLink: string
-): Promise<Artist | null> {
+): Promise<ArtistInfo | null> {
   if (!bookingLink) {
     throw new Error("booking_link is required");
   }
@@ -60,7 +59,7 @@ export async function getArtistByBookingLink(
     flow: artistData.flow,
     template: artistData.template,
     locations: artistData.locations,
-  } as unknown as Artist;
+  } as unknown as ArtistInfo;
 
   return artist;
 }

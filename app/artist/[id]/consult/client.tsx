@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useForm,
   UseFormRegister,
@@ -25,10 +25,11 @@ import {
   LocationSelectModal,
   TattooTypeSelectModal,
 } from "@/components/common";
+import type { ArtistInfo } from "@/types/artist";
 
 interface ConsultClientProps {
   artistId: string;
-  artist: Database["public"]["Tables"]["artists"]["Row"] | null;
+  artist: ArtistInfo | null;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
   error: string | null;
   artistName: string;
@@ -140,6 +141,17 @@ export function ConsultClient({
     }
   };
 
+  console.log(artist);
+
+  useEffect(() => {
+    if (artist) {
+      setValue(
+        "consultationType",
+        artist.flow?.consult_online ? "online" : "in-person"
+      );
+    }
+  }, [artist]);
+
   if (error || !artist) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -176,6 +188,7 @@ export function ConsultClient({
 
       {/* Consult Form */}
       <ConsultFormContent
+        artist={artist}
         register={register}
         handleSubmit={handleSubmit}
         setValue={setValue}
@@ -199,6 +212,7 @@ export function ConsultClient({
 }
 
 interface ConsultFormContentProps {
+  artist: ArtistInfo | null;
   register: UseFormRegister<ConsultFormData>;
   handleSubmit: UseFormHandleSubmit<ConsultFormData>;
   setValue: UseFormSetValue<ConsultFormData>;
@@ -219,6 +233,7 @@ interface ConsultFormContentProps {
 }
 
 const ConsultFormContent = ({
+  artist,
   register,
   handleSubmit,
   setValue,
@@ -462,8 +477,13 @@ const ConsultFormContent = ({
           <button
             type="button"
             onClick={() => setValue("consultationType", "online")}
+            disabled={artist?.flow?.consult_online === false}
             className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg transition-all ${
               consultationType === "online" ? "bg-secondary" : "bg-background"
+            } ${
+              artist?.flow?.consult_online === false
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
             }`}
           >
             <Video className="w-6 h-6" />
@@ -472,10 +492,15 @@ const ConsultFormContent = ({
           <button
             type="button"
             onClick={() => setValue("consultationType", "in-person")}
+            disabled={artist?.flow?.consult_in_person === false}
             className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg transition-all ${
               consultationType === "in-person"
                 ? "bg-secondary"
                 : "bg-background"
+            } ${
+              artist?.flow?.consult_in_person === false
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
             }`}
           >
             <Users className="w-6 h-6" />
@@ -509,6 +534,7 @@ const ConsultFormContent = ({
           setValue("selectedDateTimes", newDateTimes, { shouldValidate: true });
         }}
         isMultiple={false}
+        workDays={artist?.flow?.consult_work_days || undefined}
       />
 
       {/* Time Selection Accordion */}
