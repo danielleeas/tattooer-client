@@ -7,6 +7,8 @@ import {
   UseFormHandleSubmit,
   UseFormSetValue,
   FieldErrors,
+  Controller,
+  Control,
 } from "react-hook-form";
 import { BackButton } from "@/components/artist/BackButton";
 import { PhotoUpload } from "@/components/common/PhotoUpload";
@@ -29,6 +31,7 @@ interface ConsultClientProps {
   artist: Database["public"]["Tables"]["artists"]["Row"] | null;
   locations: Database["public"]["Tables"]["locations"]["Row"][];
   error: string | null;
+  artistName: string;
 }
 
 interface DateTime {
@@ -53,15 +56,20 @@ interface ConsultFormData {
 
 export function ConsultClient({
   artistId,
+  artistName,
   artist,
   locations,
   error,
 }: ConsultClientProps) {
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ConsultFormData>({
@@ -88,8 +96,48 @@ export function ConsultClient({
   const selectedDateTimes = watch("selectedDateTimes");
 
   const onSubmit = async (data: ConsultFormData) => {
-    console.log("Consult form submitted:", data);
-    // TODO: Submit to API
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      const { submitConsultRequest } = await import("./actions");
+
+      // Create FormData for file uploads
+      const formData = new FormData();
+      formData.append("artistId", artistId);
+      formData.append("fullName", data.fullName);
+      formData.append("email", data.email);
+      formData.append("phoneNumber", data.phoneNumber || "");
+      formData.append("cityCountry", data.cityCountry);
+      formData.append("locationId", data.location);
+      formData.append("consultationType", data.consultationType);
+      formData.append("tattooIdea", data.tattooIdea);
+      formData.append("tattooType", data.tattooType);
+      formData.append(
+        "selectedDateTimes",
+        JSON.stringify(data.selectedDateTimes)
+      );
+
+      // Append all photo files
+      uploadedFiles.forEach((file) => {
+        formData.append("photos", file);
+      });
+
+      const result = await submitConsultRequest(formData);
+
+      if (result.success) {
+        setSubmitSuccess(true);
+      } else {
+        setSubmitError(result.error || "Failed to submit consultation request");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit consultation request"
+      );
+    }
   };
 
   if (error || !artist) {
@@ -107,7 +155,7 @@ export function ConsultClient({
     );
   }
 
-  const basePath = `/artist/${artistId}`;
+  const basePath = `/artist/${artistName}`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col w-full px-4 py-6 gap-8">
@@ -131,6 +179,7 @@ export function ConsultClient({
         register={register}
         handleSubmit={handleSubmit}
         setValue={setValue}
+        control={control}
         errors={errors}
         isSubmitting={isSubmitting}
         onSubmit={onSubmit}
@@ -141,6 +190,9 @@ export function ConsultClient({
         selectedDateTimes={selectedDateTimes}
         uploadedPhotos={uploadedPhotos}
         setUploadedPhotos={setUploadedPhotos}
+        setUploadedFiles={setUploadedFiles}
+        submitError={submitError}
+        submitSuccess={submitSuccess}
       />
     </div>
   );
@@ -150,6 +202,7 @@ interface ConsultFormContentProps {
   register: UseFormRegister<ConsultFormData>;
   handleSubmit: UseFormHandleSubmit<ConsultFormData>;
   setValue: UseFormSetValue<ConsultFormData>;
+  control: Control<ConsultFormData>;
   errors: FieldErrors<ConsultFormData>;
   isSubmitting: boolean;
   onSubmit: (data: ConsultFormData) => void;
@@ -160,12 +213,16 @@ interface ConsultFormContentProps {
   selectedDateTimes: DateTime[];
   uploadedPhotos: string[];
   setUploadedPhotos: React.Dispatch<React.SetStateAction<string[]>>;
+  setUploadedFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  submitError: string | null;
+  submitSuccess: boolean;
 }
 
 const ConsultFormContent = ({
   register,
   handleSubmit,
   setValue,
+  control,
   errors,
   isSubmitting,
   onSubmit,
@@ -176,6 +233,9 @@ const ConsultFormContent = ({
   selectedDateTimes,
   uploadedPhotos,
   setUploadedPhotos,
+  setUploadedFiles,
+  submitError,
+  submitSuccess,
 }: ConsultFormContentProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -227,9 +287,7 @@ const ConsultFormContent = ({
           id="phoneNumber"
           type="tel"
           placeholder="+1 (555) 123-4567"
-          {...register("phoneNumber", {
-            required: "Phone number is required",
-          })}
+          {...register("phoneNumber")}
           className="bg-background border-input"
         />
         {errors.phoneNumber && (
@@ -317,19 +375,24 @@ const ConsultFormContent = ({
         photos={uploadedPhotos}
         onPhotoUpload={(files) => {
           const remainingSlots = 5 - uploadedPhotos.length;
-          Array.from(files)
-            .slice(0, remainingSlots)
-            .forEach((file) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const result = reader.result as string;
-                setUploadedPhotos((prev) => [...prev, result]);
-              };
-              reader.readAsDataURL(file);
-            });
+          const filesArray = Array.from(files).slice(0, remainingSlots);
+
+          // Store File objects for submission
+          setUploadedFiles((prev) => [...prev, ...filesArray]);
+
+          // Create preview URLs for display
+          filesArray.forEach((file) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const result = reader.result as string;
+              setUploadedPhotos((prev) => [...prev, result]);
+            };
+            reader.readAsDataURL(file);
+          });
         }}
         onPhotoRemove={(index) => {
           setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+          setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
         }}
         maxPhotos={5}
         label="Upload Reference Photos"
@@ -338,11 +401,19 @@ const ConsultFormContent = ({
       {/* Legal Checkboxes */}
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="legalAge"
-            {...register("legalAge", {
+          <Controller
+            name="legalAge"
+            control={control}
+            rules={{
               required: "You must confirm you are of legal age to get tattooed",
-            })}
+            }}
+            render={({ field }) => (
+              <Checkbox
+                id="legalAge"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
           <Label
             htmlFor="legalAge"
@@ -356,11 +427,19 @@ const ConsultFormContent = ({
         )}
 
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="agreeToPolicies"
-            {...register("agreeToPolicies", {
+          <Controller
+            name="agreeToPolicies"
+            control={control}
+            rules={{
               required: "You must agree to the policies to continue",
-            })}
+            }}
+            render={({ field }) => (
+              <Checkbox
+                id="agreeToPolicies"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
           <Label
             htmlFor="agreeToPolicies"
@@ -429,7 +508,7 @@ const ConsultFormContent = ({
           });
           setValue("selectedDateTimes", newDateTimes, { shouldValidate: true });
         }}
-        isMultiple={true}
+        isMultiple={false}
       />
 
       {/* Time Selection Accordion */}
@@ -458,14 +537,35 @@ const ConsultFormContent = ({
         </p>
       )}
 
+      {/* Error Message */}
+      {submitError && (
+        <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
+          <p className="text-sm text-destructive">{submitError}</p>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {submitSuccess && (
+        <div className="p-4 bg-green-500/10 border border-green-500 rounded-md">
+          <p className="text-sm text-green-700 dark:text-green-400">
+            Consultation request submitted successfully! We&apos;ll get back to
+            you soon.
+          </p>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || submitSuccess}
         className="w-full rounded-full"
         size="lg"
       >
-        {isSubmitting ? "Submitting..." : "Click Here to Confirm"}
+        {isSubmitting
+          ? "Submitting..."
+          : submitSuccess
+          ? "Submitted!"
+          : "Click Here to Confirm"}
       </Button>
     </form>
   );
