@@ -83,32 +83,30 @@ export function getEventsForDate(dateStr: string, events: Event[]): Event[] {
  * Check if a time slot conflicts with any events
  *
  * Logic:
- * - A time slot is blocked if the meeting time range overlaps with any event's time range
+ * - A time slot is blocked if the meeting time range overlaps with any event's blocked range
  * - Meeting time range: [slot_time, slot_time + duration + break_time]
- * - Event time range: [event_start_time, event_end_time]
+ * - Event blocked range: [event_start_time, event_end_time + break_time]
+ * - The break_time after event end prevents new meetings from starting immediately after an event
  * - Block if there's any overlap between these ranges
  *
  * @param timeSlot - The time slot to check (e.g., "09:00 AM")
  * @param dateStr - The date string (e.g., "2024-12-26")
  * @param events - Array of events for that date
  * @param duration - Meeting duration in minutes
- * @param breakTime - Break time after meeting in minutes
+ * @param breakTime - Break time after meeting in minutes (also applies after events)
  * @returns true if the time slot is blocked, false otherwise
  *
  * @example
- * // Event: 10:00-11:00
- * // Slot: 10:00 AM, duration: 60 mins, break: 0 mins
- * // Meeting: 10:00-11:00 overlaps with Event: 10:00-11:00 -> BLOCKED
+ * // Event: 10:00-11:00, break: 30 mins
+ * // Event blocked range: 10:00-11:30
+ * // Slot: 11:00 AM, duration: 60 mins, break: 0 mins
+ * // Meeting: 11:00-12:00 overlaps with Event blocked: 10:00-11:30 -> BLOCKED
  *
  * @example
- * // Event: 10:00-11:00
- * // Slot: 09:30 AM, duration: 60 mins, break: 0 mins
- * // Meeting: 09:30-10:30 overlaps with Event: 10:00-11:00 -> BLOCKED
- *
- * @example
- * // Event: 10:00-11:00
- * // Slot: 09:00 AM, duration: 60 mins, break: 0 mins
- * // Meeting: 09:00-10:00, Event: 10:00-11:00 -> No overlap -> ALLOWED
+ * // Event: 10:00-11:00, break: 30 mins
+ * // Event blocked range: 10:00-11:30
+ * // Slot: 11:30 AM, duration: 60 mins, break: 0 mins
+ * // Meeting: 11:30-12:30, Event blocked: 10:00-11:30 -> No overlap -> ALLOWED
  */
 export function isTimeSlotBlocked(
   timeSlot: string,
@@ -177,9 +175,14 @@ export function isTimeSlotBlocked(
       return false;
     }
 
-    // Check if meeting time range overlaps with event time range
-    // Two ranges overlap if: meetingStart < eventEnd && meetingEnd > eventStart
-    const overlaps = meetingStart < eventEnd && meetingEnd > eventStart;
+    // Calculate event blocked end time (event end + break time)
+    const eventBlockedEnd = new Date(eventEnd);
+    eventBlockedEnd.setMinutes(eventBlockedEnd.getMinutes() + breakTime);
+
+    // Check if meeting time range overlaps with event's blocked time range
+    // Event blocked range: [eventStart, eventBlockedEnd]
+    // Two ranges overlap if: meetingStart < eventBlockedEnd && meetingEnd > eventStart
+    const overlaps = meetingStart < eventBlockedEnd && meetingEnd > eventStart;
 
     return overlaps;
   });
