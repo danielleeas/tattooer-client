@@ -3,21 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: "Arial";
-  src: url("/assets/fonts/arial_ce.ttf") format("truetype");
-  font-display: swap;
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Arial";
-  src: url("/assets/fonts/arial_ce.ttf") format("truetype");
-  font-display: swap;
-  font-weight: bold;
-  font-style: normal;
-}
+/* Font is now loaded via next/font/local in layout.tsx */
 
 @theme inline {
   --color-background: var(--background);
