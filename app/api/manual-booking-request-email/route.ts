@@ -3,10 +3,17 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import ManualBookingRequest from '@/app/emails/ManualBookingRequest';
 
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
-
 export async function POST(req: Request) {
     try {
+        const apiKey = process.env.RESEND_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({
+                error: 'RESEND_API_KEY environment variable is not set'
+            }, { status: 500 });
+        }
+
+        const resend = new Resend(apiKey);
+
         const { to, email_templates, avatar_url, variables, payment_links } = await req.json();
 
         if (
@@ -17,7 +24,7 @@ export async function POST(req: Request) {
             (!payment_links || typeof payment_links !== "object")
         ) {
             return NextResponse.json({
-                error: "Missing or invalid fields. Expected { to, email_templates{subject,body}, avatar_url, variables, action_links }"
+                error: "Missing or invalid fields. Expected { to, email_templates{subject,body}, avatar_url, variables, payment_links }"
             }, { status: 400 });
         }
 

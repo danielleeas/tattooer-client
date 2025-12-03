@@ -17,6 +17,7 @@ import {
     Tailwind,
     Text,
 } from '@react-email/components';
+import { getBaseUrl, joinUrl } from '@/lib/utils';
 
 type ManualBookingRequestProps = {
     // Map of placeholder key -> value, e.g. { "Client First Name": "Sam", "auto-fill-title": "Floral sleeve" }
@@ -131,6 +132,7 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
 
     const artistName = getVariable(variables, 'Your Name', 'Simple Tattooer');
     const previewText = previewFirstLine ?? "Thanks for sending your idea my way!";
+    const baseUrl = getBaseUrl();
 
     type Segment =
         | { type: 'text'; content: string }
@@ -187,6 +189,14 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
             if (i < lines.length - 1) parts.push(<br key={`br-${i}-${line.length}`} />);
         }
         return parts;
+    };
+
+    const resolveButtonHref = (label: string): string => {
+        // Prefer variable value with label name, fallback to payment_links[label]
+        const fromVar = getVariable(variables, label, '');
+        if (fromVar) return fromVar;
+        if (payment_links && payment_links[label]) return payment_links[label];
+        return '#';
     };
 
     return (
@@ -269,7 +279,7 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                                     // The endpoint should copy the text to clipboard
                                                     const href = isValueUrl 
                                                         ? value 
-                                                        : `http://localhost:3000/api/copy?text=${encodeURIComponent(value)}`;
+                                                        : joinUrl(baseUrl, 'api/copy') + `?text=${encodeURIComponent(value)}`;
                                                     
                                                     return (
                                                         <React.Fragment key={`pl-btn-${key}`}>
@@ -284,6 +294,26 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                                     );
                                                 })}
                                         </React.Fragment>
+                                    );
+                                }
+                                if (seg.type === 'button') {
+                                    const hrefValue = resolveButtonHref(seg.label);
+                                    // If hrefValue is '#', use it directly; otherwise check if it's a URL
+                                    const href = hrefValue === '#' 
+                                        ? hrefValue
+                                        : (isUrl(hrefValue) 
+                                            ? hrefValue 
+                                            : joinUrl(baseUrl, 'api/copy') + `?text=${encodeURIComponent(hrefValue)}`);
+                                    
+                                    return (
+                                        <Button
+                                            key={`b-${idx}`}
+                                            className="w-full text-[14px] font-normal no-underline text-center px-5"
+                                            style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                            href={href}
+                                        >
+                                            {seg.label}
+                                        </Button>
                                     );
                                 }
 
