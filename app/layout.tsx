@@ -1,5 +1,24 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const arialFont = localFont({
+  src: [
+    {
+      path: "../public/assets/fonts/arial_ce.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/assets/fonts/arial_ce.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-arial",
+  display: "swap",
+  preload: true,
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased">
+      <body className={`${arialFont.variable} antialiased`}>
         <div className="min-h-screen w-full max-w-[390px] mx-auto px-1 overflow-hidden">
           {children}
         </div>
