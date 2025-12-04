@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createBookingRequest } from "@/lib/api/booking-request";
+import { getArtistById } from "@/lib/api/artist";
 import type { Database } from "@/types/supabase";
 
 type BookingRequestInsert =
@@ -30,6 +31,12 @@ export async function submitBookingRequest(
       | "addon"
       | "between"
       | "";
+
+    // Get artist information for email
+    const artist = await getArtistById(artistId);
+    if (!artist) {
+      throw new Error("Artist not found");
+    }
 
     // Upload photos to Supabase storage
     const photoUrls: string[] = [];
@@ -90,6 +97,28 @@ export async function submitBookingRequest(
 
     // Create booking request
     await createBookingRequest(bookingRequest);
+
+    // Send booking request email (don't fail the booking if email fails)
+    try {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/booking-request-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: email,
+          variables: {
+            "Client First Name": fullName,
+            "Your Name": artist.full_name,
+            "Studio Name": artist.studio_name,
+          },
+          avatar_url: artist.avatar,
+        }),
+      });
+    } catch (emailError) {
+      // Log email error but don't fail the booking
+      console.error("Failed to send booking request email:", emailError);
+    }
 
     return { success: true };
   } catch (error) {

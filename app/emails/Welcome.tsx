@@ -80,7 +80,7 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                 className="mb-4"
                             />
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We've made short walkthrough videos for every feature:</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
                             <Link href="https://example.com" style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
