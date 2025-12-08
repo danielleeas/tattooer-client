@@ -2,13 +2,13 @@
 
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 
 const PdfEditor = dynamic(() => import('@/components/common/PdfEditor'), {
   ssr: false,
 });
 
-function SignPage() {
+function SignPageContent() {
   const searchParams = useSearchParams();
   const waiverUrl = searchParams.get('waiver');
   const router = useRouter();
@@ -129,6 +129,18 @@ function SignPage() {
         onSignedPdfReady={handleSignedPdfReady}
       />
     </div>
+  );
+}
+
+function SignPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    }>
+      <SignPageContent />
+    </Suspense>
   );
 }
 
