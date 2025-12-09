@@ -1,14 +1,16 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createBookingRequest } from "@/lib/api/booking-request";
-import { getArtistById } from "@/lib/api/artist";
+import { createConsultRequest } from "@/lib/api/book-consult";
+import {
+  getArtistEventsForDates,
+  getArtistBlockingEvents,
+} from "@/lib/api/artist";
 import type { Database } from "@/types/supabase";
 
-type BookingRequestInsert =
-  Database["public"]["Tables"]["booking_requests"]["Insert"];
+type Event = Database["public"]["Tables"]["events"]["Row"];
 
-export async function submitBookingRequest(
+export async function submitConsultRequest(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -21,10 +23,9 @@ export async function submitBookingRequest(
     const phoneNumber = formData.get("phoneNumber") as string;
     const cityCountry = formData.get("cityCountry") as string;
     const locationId = formData.get("locationId") as string;
-    const preferredDays = formData.get("preferredDays") as
-      | "any"
-      | "weekdays"
-      | "weekend";
+    const consultationType = formData.get("consultationType") as
+      | "online"
+      | "in-person";
     const tattooIdea = formData.get("tattooIdea") as string;
     const tattooType = formData.get("tattooType") as
       | "coverup"
@@ -32,11 +33,21 @@ export async function submitBookingRequest(
       | "between"
       | "";
 
-    // Get artist information for email
-    const artist = await getArtistById(artistId);
-    if (!artist) {
-      throw new Error("Artist not found");
+    // Parse selected date/times from JSON string
+    const selectedDateTimesJson = formData.get("selectedDateTimes") as string;
+    const selectedDateTimes = JSON.parse(selectedDateTimesJson) as Array<{
+      date: string;
+      time: string;
+    }>;
+
+    if (!selectedDateTimes || selectedDateTimes.length === 0) {
+      throw new Error("Please select at least one date and time");
     }
+
+    // Use the first selected date/time for the consultation
+    const firstDateTime = selectedDateTimes[0];
+    const consultDate = firstDateTime.date;
+    const consultStartTime = firstDateTime.time;
 
     // Upload photos to Supabase storage
     const photoUrls: string[] = [];
@@ -81,54 +92,56 @@ export async function submitBookingRequest(
       }
     }
 
-    // Prepare booking request data
-    const bookingRequest: BookingRequestInsert = {
+    // Prepare consult request data
+    const consultRequest = {
       artist_id: artistId,
       location_id: locationId,
       full_name: fullName,
       email: email,
-      phone_number: phoneNumber,
+      phone_number: phoneNumber || null,
+      residence: cityCountry,
+      consult_type: consultationType,
+      consult_date: consultDate,
+      consult_start_time: consultStartTime,
       tattoo_idea: tattooIdea,
       type_of_tattoo: tattooType || "",
-      prefer_days: preferredDays,
       photos: photoUrls,
       status: "pending",
     };
 
-    // Create booking request
-    await createBookingRequest(bookingRequest);
-
-    // Send booking request email (don't fail the booking if email fails)
-    try {
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/booking-request-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: email,
-          variables: {
-            "Client First Name": fullName,
-            "Your Name": artist.full_name,
-            "Studio Name": artist.studio_name,
-          },
-          avatar_url: artist.avatar,
-        }),
-      });
-    } catch (emailError) {
-      // Log email error but don't fail the booking
-      console.error("Failed to send booking request email:", emailError);
-    }
+    // Create consult request
+    await createConsultRequest(consultRequest);
 
     return { success: true };
   } catch (error) {
-    console.error("Error submitting booking request:", error);
+    console.error("Error submitting consult request:", error);
     return {
       success: false,
       error:
         error instanceof Error
           ? error.message
-          : "Failed to submit booking request",
+          : "Failed to submit consultation request",
     };
+  }
+}
+
+export async function fetchEventsForDates(
+  artistId: string,
+  dates: string[]
+): Promise<Event[]> {
+  try {
+    return await getArtistEventsForDates(artistId, dates);
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return [];
+  }
+}
+
+export async function fetchBlockingEvents(artistId: string): Promise<Event[]> {
+  try {
+    return await getArtistBlockingEvents(artistId);
+  } catch (error) {
+    console.error("Error fetching blocking events:", error);
+    return [];
   }
 }

@@ -24,7 +24,7 @@ export function ArtistLinkPage({ artist, className }: ArtistLinkPageProps) {
   return (
     <div
       className={cn(
-        "min-h-screen bg-background flex flex-col items-center justify-center w-full gap-8",
+        "min-h-screen bg-background flex flex-col items-center justify-center w-[390px] mx-auto gap-8",
         className
       )}
     >

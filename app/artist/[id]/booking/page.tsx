@@ -45,6 +45,8 @@ export default async function BookingPage({
     );
   }
 
+  console.log(artist)
+
   return (
     <BookingClient
       artistId={artist.id}

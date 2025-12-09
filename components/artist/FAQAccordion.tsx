@@ -22,7 +22,7 @@ export function FAQAccordion({ categories, className }: FAQAccordionProps) {
   return (
     <div className={className}>
       {categories.map((category) => (
-        <div key={category.id} className="mb-6">
+        <div key={category.id} className="mb-8">
           <h2 className="text-2xl text-foreground mb-2">
             {category.category_name}
           </h2>
@@ -35,7 +35,7 @@ export function FAQAccordion({ categories, className }: FAQAccordionProps) {
               <AccordionPrimitive.Item
                 key={item.id}
                 value={item.id}
-                className="border-b border-border"
+                className="border-b border-border last:border-b-0"
               >
                 <AccordionPrimitive.Header className="flex">
                   <AccordionPrimitive.Trigger

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { getBaseUrl, joinUrl } from "@/lib/utils";
 import { getArtistByBookingLink } from "@/lib/api/artist";
 import { ArtistLinkPage } from "@/components/artist/ArtistLinkPage";
@@ -28,8 +27,6 @@ export default async function ArtistPage({
     error = err instanceof Error ? err.message : "Failed to fetch data";
     console.error("Error fetching data:", err);
   }
-
-  console.log(loading);
 
   if (error || !artist) {
     return <ArtistNotFound error={error} />;

@@ -42,7 +42,7 @@ export function FlashDrawer({ isOpen, onClose, flash, watermark }: FlashDrawerPr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         variant="drawer"
-        className="px-6 pb-8 bg-secondary rounded-3xl!"
+        className="px-6 pb-8 bg-secondary rounded-t-3xl! rounded-b-none! max-h-[90vh] overflow-y-auto"
       >
         {/* Content */}
         <div className="space-y-6">

@@ -47,7 +47,8 @@ export default async function ConsultPage({
 
   return (
     <ConsultClient
-      artistId={id}
+      artistId={artist.id}
+      artistName={id}
       artist={artist}
       locations={locations}
       error={error}
