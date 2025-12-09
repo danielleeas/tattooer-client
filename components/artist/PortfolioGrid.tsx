@@ -26,7 +26,7 @@ export function PortfolioGrid({
   }
 
   return (
-    <div className={cn("grid grid-cols-2 gap-4 w-full", className)}>
+    <div className={cn("flex flex-wrap justify-around gap-4 w-full", className)}>
       {portfolios.map((portfolio) => (
         <PortfolioCard
           key={portfolio.id}

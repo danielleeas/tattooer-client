@@ -449,7 +449,7 @@ const BookingFormContent = ({
         {uploadedPhotos.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
             {uploadedPhotos.map((photo, index) => (
-              <div key={index} className="relative group">
+              <div key={index} className="relative">
                 <img
                   src={photo}
                   alt={`Reference ${index + 1}`}
@@ -458,7 +458,7 @@ const BookingFormContent = ({
                 <button
                   type="button"
                   onClick={() => removePhoto(index)}
-                  className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full"
                 >
                   <X className="w-4 h-4" />
                 </button>

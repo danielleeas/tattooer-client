@@ -246,7 +246,7 @@ export function DatePicker({
 
   return (
     <div
-      className={`flex flex-col gap-1 bg-secondary p-4 rounded-lg ${className}`}
+      className={`flex flex-col gap-1 bg-secondary p-4 rounded-lg max-w-[390px] mx-auto ${className}`}
     >
       {isMultiple && selectedDates.length > 0 && (
         <div className="text-xs text-muted-foreground mb-2 text-center">

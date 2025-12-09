@@ -79,7 +79,7 @@ export function PhotoUpload({
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {photos.map((photo, index) => (
-            <div key={index} className="relative group">
+            <div key={index} className="relative">
               <Image
                 src={photo}
                 alt={`Photo ${index + 1}`}
@@ -90,7 +90,7 @@ export function PhotoUpload({
               <button
                 type="button"
                 onClick={() => onPhotoRemove(index)}
-                className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-full"
               >
                 <X className="w-4 h-4" />
               </button>

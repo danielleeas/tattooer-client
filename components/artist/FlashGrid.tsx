@@ -36,7 +36,7 @@ export function FlashGrid({
   }
 
   return (
-    <div className={cn("grid grid-cols-2 gap-4 w-full", className)}>
+    <div className={cn("flex flex-wrap gap-4 justify-around w-full", className)}>
       {flashes.map((flash) => (
         <FlashCard
           key={flash.id}

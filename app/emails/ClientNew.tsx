@@ -17,7 +17,7 @@ import {
     Tailwind,
     Text,
 } from '@react-email/components';
-import { getVariable, renderTemplate } from '@/lib/utils/emails';
+import { getVariable, renderTemplate, normalizeKey } from '@/lib/utils/emails';
 
 type ClientNewProps = {
     email_templates: {
