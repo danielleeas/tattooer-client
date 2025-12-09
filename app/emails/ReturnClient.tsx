@@ -17,53 +17,97 @@ import {
     Tailwind,
     Text,
 } from '@react-email/components';
-import { getVariable, renderTemplate } from '@/lib/utils/emails';
 
-type ClientNewProps = {
+type ReturnClientProps = {
     email_templates: {
         subject: string;
         body: string;
     };
     avatar_url: string;
     variables?: Record<string, string | readonly string[]>;
-    action_links?: Record<string, string>;
 };
 
+function normalizeKey(key: string): string {
+    return key.trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function getVariable(variables: Record<string, string | readonly string[]>, name: string, fallback: string): string {
+    const target = normalizeKey(name);
+    for (const [k, v] of Object.entries(variables)) {
+        if (normalizeKey(k) === target) {
+            if (Array.isArray(v)) return v.join('\n');
+            if (typeof v === 'string') return v;
+            return fallback;
+        }
+    }
+    return fallback;
+}
+
+function renderTemplate(template: string, variables: Record<string, string | readonly string[]>): string {
+    if (!template) return '';
+    // Replace [key] - always keep wrapper if missing
+    let result = template.replace(/\[([^\]]+)\]/g, (_match, key: string) => {
+        if (key in variables) {
+            const val = variables[key];
+            if (Array.isArray(val)) return val.join('\n');
+            return typeof val === 'string' ? val : '';
+        }
+        const normalized = normalizeKey(key);
+        for (const [k, v] of Object.entries(variables)) {
+            if (normalizeKey(k) === normalized) {
+                if (Array.isArray(v)) return v.join('\n') ?? '';
+                return typeof v === 'string' ? v : '';
+            }
+        }
+        return `[${key}]`;
+    });
+    // Replace (key) - only replace if variable exists, otherwise keep as-is
+    result = result.replace(/\(([^)]+)\)/g, (match: string, key: string) => {
+        const hasDirect = key in variables;
+        let found: string | readonly string[] | undefined;
+        if (hasDirect) {
+            found = variables[key];
+        } else {
+            const normalized = normalizeKey(key);
+            for (const [k, v] of Object.entries(variables)) {
+                if (normalizeKey(k) === normalized) {
+                    found = v;
+                    break;
+                }
+            }
+        }
+        if (found === undefined) return match;
+        if (Array.isArray(found)) return found.join('\n');
+        return typeof found === 'string' ? found : match;
+    });
+    return result;
+}
 
 const emailTemplates = {
-    subject: "Your tattoo is confirmed & your client portal is ready",
-    body: "Hi [Client First Name],\n\nI'm so excited to be working with you. As a perk of being my client, you now get access to your exclusive Client Portal — powered by Simple Tattooer.\n\nYour tattoo is confirmed for:\n[Date, Time, location]\n\nYou'll receive your appointment confirmation and reminders by email. To manage your booking and message your artist\n\nDownload our app for free below — no passwords needed. Everything you need is always one click away.\n\n(Button- Start Here)\n\nInside your personal dashboard, you'll find your appointment details, payment info and receipts, my aftercare + FAQ pages, a reschedule/cancel button if anything changes, and a direct message portal to reach me anytime. \n\nThis is your private space — built just for you.\n\nCan't wait to see you soon,\n[Your Name]\n[Studio Name]"
+    subject: "You're In — Your New Appointment's Ready",
+    body: "Hi [Client First Name],\n\nYour new tattoo project is officially a go!\n\nYour tattoo is confirmed for:\n[Date, Time, location]\n\n You can also view the full details in your client dashboard in the “Your Dates” section!\n\nThanks again for trusting me with another piece — I can't wait to get started.\n\nSee you soon,\n[Your Name]\n[Studio Name]"
 }
 
 const tempVariables = {
     "Client First Name": "Sam",
-    "Date, Time, location": [
-        "Nov 20, 2025 — 2:00 PM, Toronto studio",
-        "Nov 22, 2025 — 4:00 PM, Toronto studio"
-    ],
+    "Date, Time, location": "Nov 20, 2025 — 2:00 PM, Toronto studio",
     "Your Name": "Daniel Lee",
     "Studio Name": "Simple Tattooer",
-    "Start Here": "https://simpletattooer.com/client-portal?id=234234-2342-234234-3242asd",
 } as const;
 
 const defaultAvatarUrl = "https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/dummy_photo.png";
 
-const defaultActionLinks = {
-    "Start Here": "https://simpletattooer.com/client-portal?id=234234-2342-234234-3242asd",
-} as const;
-
-const ClientNew = ({
+const ReturnClientEmail = ({
     variables = tempVariables,
     email_templates = emailTemplates,
     avatar_url = defaultAvatarUrl,
-    action_links = defaultActionLinks
-}: ClientNewProps) => {
+}: ReturnClientProps) => {
 
     const resolvedSubject = renderTemplate(email_templates.subject, variables);
     const resolvedBody = renderTemplate(email_templates.body, variables);
 
     const artistName = getVariable(variables, 'Your Name', 'Simple Tattooer');
-    const previewText = (resolvedBody.split('\n').find((l) => l.trim().length > 0)) ?? "Thanks for sending your idea my way!";
+    const previewText = (resolvedBody.split('\n').find((l) => l.trim().length > 0)) ?? "Your tattoo is confirmed!";
 
     type Segment = { type: 'text'; content: string } | { type: 'button'; label: string };
 
@@ -119,18 +163,6 @@ const ClientNew = ({
             if (i < lines.length - 1) parts.push(<br key={`br-${i}-${line.length}`} />);
         }
         return parts;
-    };
-
-    const resolveButtonHref = (label: string): string => {
-        // Prefer variable value with label name, fallback to action_links[label], then default known mapping
-        const fromVar = getVariable(variables, label, '');
-        if (fromVar) return fromVar;
-        if (action_links[label]) return action_links[label];
-        if (defaultActionLinks[label as keyof typeof defaultActionLinks]) {
-            return defaultActionLinks[label as keyof typeof defaultActionLinks];
-        }
-        // Ultimate fallback
-        return defaultActionLinks['Start Here'];
     };
 
     return (
@@ -203,17 +235,6 @@ const ClientNew = ({
                                         </Text>
                                     );
                                 }
-                                const href = resolveButtonHref(seg.label);
-                                return (
-                                    <Button
-                                        key={`b-${idx}`}
-                                        className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                        href={href}
-                                        style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
-                                    >
-                                        {seg.label}
-                                    </Button>
-                                );
                             })}
                         </Section>
 
@@ -268,4 +289,4 @@ const ClientNew = ({
     )
 }
 
-export default ClientNew;
+export default ReturnClientEmail;

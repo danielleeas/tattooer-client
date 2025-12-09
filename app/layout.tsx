@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${arialFont.variable} antialiased`}>
-        <div className="min-h-screen w-full max-w-[390px] mx-auto px-1 overflow-hidden">
+        <div className="min-h-screen w-full mx-auto overflow-hidden">
           {children}
         </div>
       </body>
