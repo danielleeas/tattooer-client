@@ -11,15 +11,25 @@ interface ArtistLinkPageProps {
 }
 
 export function ArtistLinkPage({ artist, className }: ArtistLinkPageProps) {
-  // Extract Instagram handle from social_handler (assuming format like "@username" or "username")
-  const instagramHandle = artist.social_handler
-    ? artist.social_handler.replace(/^@/, "")
-    : null;
-
   const uniqueUserName = artist.booking_link.split("/").pop();
 
   // Generate URLs for different actions (you may need to adjust these based on your routing)
   const basePath = `/artist/${uniqueUserName}`;
+
+  // Derive display handle from artist name (firstname.lastname, lowercase)
+  const nameParts = (artist.full_name || "").trim().toLowerCase().split(/\s+/);
+  const displayHandle =
+    nameParts.length > 1
+      ? `${nameParts[0]}.${nameParts[nameParts.length - 1]}`
+      : nameParts[0] || null;
+
+  // Build social link from social_handler (accepts full URL or handle)
+  const rawSocial = artist.social_handler?.replace(/^@/, "").trim();
+  const socialLink = rawSocial
+    ? rawSocial.startsWith("http")
+      ? rawSocial
+      : `https://instagram.com/${rawSocial}`
+    : null;
 
   return (
     <div
@@ -31,7 +41,8 @@ export function ArtistLinkPage({ artist, className }: ArtistLinkPageProps) {
       {/* Header */}
       <ArtistProfileHeader
         name={artist.full_name || "Artist"}
-        instagramHandle={instagramHandle}
+        displayHandle={displayHandle}
+        socialLink={socialLink}
       />
       {/* Action Buttons */}
       <div className="flex justify-between items-center w-full">

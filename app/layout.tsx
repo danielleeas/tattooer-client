@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const arialFont = localFont({
   src: [
@@ -42,6 +43,7 @@ export default function RootLayout({
         <div className="min-h-screen w-full mx-auto overflow-hidden">
           {children}
         </div>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

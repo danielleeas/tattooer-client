@@ -34,6 +34,7 @@
     "react-hook-form": "^7.66.1",
     "react-pdf": "^10.2.0",
     "resend": "^6.5.2",
+    "sonner": "^2.0.7",
     "supabase": "^2.63.1",
     "tailwind-merge": "^3.4.0"
   },
