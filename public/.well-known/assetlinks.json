@@ -1,12 +1,13 @@
 [
   {
     "relation": [
-      "delegate_permission/common.handle_all_urls"
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
     ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.darkocean.simpletattooer",
-      "sha256_cert_fingerprints": ["E1:55:75:0B:52:97:4E:BD:B3:5D:0F:C3:1D:AB:AB:22:53:3C:3F:2B:98:16:44:84:12:68:B6:C9:20:73:23:9A"]
+      "sha256_cert_fingerprints": ["FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C"]
     }
   }
 ]
