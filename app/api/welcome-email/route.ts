@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
         const resend = new Resend(apiKey);
 
-        const { to, artistName, artistBookingLink: bookingLink } = await req.json();
+        const { to, artistName, artistBookingLink: bookingLink, qrCodeUrl } = await req.json();
 
         if (!to || !artistName || !bookingLink) {
             return NextResponse.json({
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
-        const html = await render(WelcomeEmail({ artistName, bookingLink }));
+        const html = await render(WelcomeEmail({ artistName, bookingLink, qrCodeUrl }));
 
         const data = await resend.emails.send({
             from: 'Simple Tattooer <noreply@simpletattooer.com>', // must be verified in Resend
