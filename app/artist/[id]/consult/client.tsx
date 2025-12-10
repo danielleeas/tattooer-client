@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useForm,
   UseFormRegister,
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Video, Users } from "lucide-react";
+import { toast } from "sonner";
 import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,10 +64,10 @@ export function ConsultClient({
   locations,
   error,
 }: ConsultClientProps) {
+  const router = useRouter();
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [events, setEvents] = useState<
     Database["public"]["Tables"]["events"]["Row"][]
   >([]);
@@ -104,7 +106,6 @@ export function ConsultClient({
 
   const onSubmit = async (data: ConsultFormData) => {
     setSubmitError(null);
-    setSubmitSuccess(false);
 
     try {
       const { submitConsultRequest } = await import("./actions");
@@ -133,7 +134,11 @@ export function ConsultClient({
       const result = await submitConsultRequest(formData);
 
       if (result.success) {
-        setSubmitSuccess(true);
+        toast.success("Consultation request submitted successfully! We'll get back to you soon.");
+        // Redirect to artist page after a short delay
+        setTimeout(() => {
+          router.push(`/artist/${artistName}`);
+        }, 2000);
       } else {
         setSubmitError(result.error || "Failed to submit consultation request");
       }
@@ -251,10 +256,10 @@ export function ConsultClient({
         tattooType={tattooType}
         selectedDateTimes={selectedDateTimes}
         uploadedPhotos={uploadedPhotos}
+        uploadedFiles={uploadedFiles}
         setUploadedPhotos={setUploadedPhotos}
         setUploadedFiles={setUploadedFiles}
         submitError={submitError}
-        submitSuccess={submitSuccess}
         events={events}
         blockingEvents={blockingEvents}
         consultDuration={artist?.flow?.consult_duration || 60}
@@ -279,10 +284,10 @@ interface ConsultFormContentProps {
   tattooType: "coverup" | "addon" | "between" | "";
   selectedDateTimes: DateTime[];
   uploadedPhotos: string[];
+  uploadedFiles: File[];
   setUploadedPhotos: React.Dispatch<React.SetStateAction<string[]>>;
   setUploadedFiles: React.Dispatch<React.SetStateAction<File[]>>;
   submitError: string | null;
-  submitSuccess: boolean;
   events: Database["public"]["Tables"]["events"]["Row"][];
   blockingEvents: Database["public"]["Tables"]["events"]["Row"][];
   consultDuration: number;
@@ -304,10 +309,10 @@ const ConsultFormContent = ({
   tattooType,
   selectedDateTimes,
   uploadedPhotos,
+  uploadedFiles,
   setUploadedPhotos,
   setUploadedFiles,
   submitError,
-  submitSuccess,
   events,
   blockingEvents,
   consultDuration,
@@ -452,9 +457,11 @@ const ConsultFormContent = ({
         onPhotoUpload={(files) => {
           const remainingSlots = 5 - uploadedPhotos.length;
           const filesArray = Array.from(files).slice(0, remainingSlots);
+          const nextFiles = [...uploadedFiles, ...filesArray];
 
           // Store File objects for submission
-          setUploadedFiles((prev) => [...prev, ...filesArray]);
+          setUploadedFiles(nextFiles);
+          setValue("referencePhotos", nextFiles, { shouldValidate: true });
 
           // Create preview URLs for display
           filesArray.forEach((file) => {
@@ -467,12 +474,28 @@ const ConsultFormContent = ({
           });
         }}
         onPhotoRemove={(index) => {
-          setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
-          setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+          const nextUploadedPhotos = uploadedPhotos.filter((_, i) => i !== index);
+          const nextUploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+          setUploadedPhotos(nextUploadedPhotos);
+          setUploadedFiles(nextUploadedFiles);
+          setValue("referencePhotos", nextUploadedFiles, { shouldValidate: true });
         }}
         maxPhotos={5}
         label="Upload Reference Photos"
       />
+      <input
+        type="hidden"
+        {...register("referencePhotos", {
+          validate: (value) =>
+            (value?.length ?? 0) > 0 ||
+            "Please upload at least one reference photo.",
+        })}
+      />
+      {errors.referencePhotos && (
+        <p className="text-sm text-destructive">
+          {errors.referencePhotos.message}
+        </p>
+      )}
 
       {/* Legal Checkboxes */}
       <div className="space-y-4">
@@ -641,27 +664,15 @@ const ConsultFormContent = ({
         </div>
       )}
 
-      {/* Success Message */}
-      {submitSuccess && (
-        <div className="p-4 bg-green-500/10 border border-green-500 rounded-md">
-          <p className="text-sm text-green-700 dark:text-green-400">
-            Consultation request submitted successfully! We&apos;ll get back to
-            you soon.
-          </p>
-        </div>
-      )}
-
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isSubmitting || submitSuccess}
+        disabled={isSubmitting}
         className="w-full rounded-full"
         size="lg"
       >
         {isSubmitting
           ? "Submitting..."
-          : submitSuccess
-          ? "Submitted!"
           : "Click Here to Confirm"}
       </Button>
     </form>

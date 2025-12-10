@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useForm,
   UseFormRegister,
@@ -18,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Camera, X } from "lucide-react";
+import { toast } from "sonner";
 import type { Database } from "@/types/supabase";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import {
@@ -55,10 +57,10 @@ export function BookingClient({
   locations,
   error,
 }: BookingClientProps) {
+  const router = useRouter();
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const {
     register,
     handleSubmit,
@@ -93,9 +95,11 @@ export function BookingClient({
 
     const remainingSlots = 5 - uploadedPhotos.length;
     const filesArray = Array.from(files).slice(0, remainingSlots);
+    const nextFiles = [...uploadedFiles, ...filesArray];
 
     // Store File objects for submission
-    setUploadedFiles((prev) => [...prev, ...filesArray]);
+    setUploadedFiles(nextFiles);
+    setValue("photos", nextFiles, { shouldValidate: true });
 
     // Create preview URLs for display
     filesArray.forEach((file) => {
@@ -109,13 +113,15 @@ export function BookingClient({
   };
 
   const removePhoto = (index: number) => {
-    setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    const nextUploadedPhotos = uploadedPhotos.filter((_, i) => i !== index);
+    const nextUploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+    setUploadedPhotos(nextUploadedPhotos);
+    setUploadedFiles(nextUploadedFiles);
+    setValue("photos", nextUploadedFiles, { shouldValidate: true });
   };
 
   const onSubmit = async (data: BookingFormData) => {
     setSubmitError(null);
-    setSubmitSuccess(false);
 
     try {
       const { submitBookingRequest } = await import("./actions");
@@ -140,8 +146,11 @@ export function BookingClient({
       const result = await submitBookingRequest(formData);
 
       if (result.success) {
-        setSubmitSuccess(true);
-        // Optionally reset form or redirect
+        toast.success("Booking request submitted successfully! We'll get back to you soon.");
+        // Redirect to artist page after a short delay
+        setTimeout(() => {
+          router.push(`/artist/${artistName}`);
+        }, 2000);
       } else {
         setSubmitError(result.error || "Failed to submit booking request");
       }
@@ -206,7 +215,7 @@ export function BookingClient({
         location={location}
         tattooType={tattooType}
         submitError={submitError}
-        submitSuccess={submitSuccess}
+      
       />
     </div>
   );
@@ -228,7 +237,6 @@ interface BookingFormContentProps {
   location: string;
   tattooType: "coverup" | "addon" | "between" | "";
   submitError: string | null;
-  submitSuccess: boolean;
 }
 
 const BookingFormContent = ({
@@ -247,7 +255,6 @@ const BookingFormContent = ({
   location,
   tattooType,
   submitError,
-  submitSuccess,
 }: BookingFormContentProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -446,6 +453,17 @@ const BookingFormContent = ({
             </p>
           </div>
         </label>
+        <input
+          type="hidden"
+          {...register("photos", {
+            validate: (value) =>
+              (value?.length ?? 0) > 0 ||
+              "Please upload at least one reference photo.",
+          })}
+        />
+        {errors.photos && (
+          <p className="text-sm text-destructive">{errors.photos.message}</p>
+        )}
         {uploadedPhotos.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
             {uploadedPhotos.map((photo, index) => (
@@ -532,27 +550,16 @@ const BookingFormContent = ({
         </div>
       )}
 
-      {/* Success Message */}
-      {submitSuccess && (
-        <div className="p-4 bg-green-500/10 border border-green-500 rounded-md">
-          <p className="text-sm text-green-700 dark:text-green-400">
-            Booking request submitted successfully! We&apos;ll get back to you
-            soon.
-          </p>
-        </div>
-      )}
 
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isSubmitting || submitSuccess}
+        disabled={isSubmitting}
         className="w-full rounded-full"
         size="lg"
       >
         {isSubmitting
           ? "Submitting..."
-          : submitSuccess
-          ? "Submitted!"
           : "Looks Good — Continue"}
       </Button>
     </form>
