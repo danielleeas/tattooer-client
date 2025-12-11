@@ -16,6 +16,8 @@ export default async function ArtistPage({
   let error: string | null = null;
   let loading = true;
 
+  console.log(bookingLink);
+
   try {
     artist = await getArtistByBookingLink(bookingLink);
     if (!artist) {

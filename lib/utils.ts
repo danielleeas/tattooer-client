@@ -14,14 +14,14 @@ export function getBaseUrl(): string {
   // For client-side: only NEXT_PUBLIC_* variables are available
   if (typeof window !== "undefined") {
     // Client-side: use NEXT_PUBLIC_BASE_URL
-    return process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    return process.env.NEXT_PUBLIC_BASE_URL || window.location.origin + "/artist";
   }
   
   // Server-side: prefer NEXT_PUBLIC_BASE_URL, fallback to BASE_URL, then default
   return (
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.BASE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+    process.env.NEXT_PUBLIC_BASE_URL + "/artist" ||
+    process.env.BASE_URL + "/artist" ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/artist` : "http://localhost:3000/artist")
   );
 }
 
