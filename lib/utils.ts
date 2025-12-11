@@ -10,19 +10,21 @@ export function cn(...inputs: ClassValue[]) {
  * @returns The base URL (e.g., "https://example.com" or "http://localhost:3000")
  */
 export function getBaseUrl(): string {
-  // For server-side: use NEXT_PUBLIC_BASE_URL or BASE_URL
-  // For client-side: only NEXT_PUBLIC_* variables are available
+  const sanitize = (url: string) => url.replace(/\/+$/, "");
+
+  // Client-side: prefer NEXT_PUBLIC_BASE_URL, fall back to window origin
   if (typeof window !== "undefined") {
-    // Client-side: use NEXT_PUBLIC_BASE_URL
-    return process.env.NEXT_PUBLIC_BASE_URL || window.location.origin + "/artist";
+    const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    return joinUrl(sanitize(base), "artist");
   }
-  
-  // Server-side: prefer NEXT_PUBLIC_BASE_URL, fallback to BASE_URL, then default
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL + "/artist" ||
-    process.env.BASE_URL + "/artist" ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/artist` : "http://localhost:3000/artist")
-  );
+
+  // Server-side: prefer NEXT_PUBLIC_BASE_URL, then BASE_URL, then VERCEL_URL, then localhost
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.BASE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+  return joinUrl(sanitize(base), "artist");
 }
 
 /**
