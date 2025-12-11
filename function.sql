@@ -47,6 +47,6 @@ BEGIN
   LEFT JOIN rules r ON r.artist_id = a.id
   LEFT JOIN flows f ON f.artist_id = a.id
   LEFT JOIN templates t ON t.artist_id = a.id
-  WHERE LOWER(a.booking_link) = LOWER(booking_link_param);
+  WHERE LOWER(a.booking_link) = LOWER(booking_link_param) OR LOWER(a.old_links) = LOWER(booking_link_param);
 END;
 $$ LANGUAGE plpgsql;
