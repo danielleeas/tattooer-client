@@ -100,8 +100,45 @@ const defaultAvatarUrl = "https://lkzdwcjvzyrhsieijjdr.supabase.co/storage/v1/ob
 
 const ManualBookingRequest = ({ variables = tempVariables, email_templates = emailTemplates, payment_links = paymentLinks, avatar_url = defaultAvatarUrl }: ManualBookingRequestProps) => {
 
+    // Helper: render body template line-by-line and hide any line whose placeholder value is empty/missing.
+    const resolveBodyWithHiddenEmptyLines = (
+        template: string,
+        vars: Record<string, string | readonly string[]>,
+    ): string => {
+        if (!template) return '';
+
+        const placeholderRegex = /\[([^\]]+)\]/g;
+        const lines = template.split('\n');
+        const renderedLines: string[] = [];
+
+        for (const line of lines) {
+            let match: RegExpExecArray | null;
+            let shouldHide = false;
+
+            // Check all [key] placeholders in the line
+            placeholderRegex.lastIndex = 0;
+            while ((match = placeholderRegex.exec(line)) !== null) {
+                const key = match[1];
+                const value = getVariable(vars as Record<string, string | readonly string[]>, key, '');
+                if (!value || value.trim().length === 0) {
+                    // If any placeholder in this line resolves to an empty string,
+                    // hide the entire line (e.g. "Deposit policy: [auto-fill-deposit-policy]").
+                    shouldHide = true;
+                    break;
+                }
+            }
+
+            if (shouldHide) continue;
+
+            // Render this line normally (replace placeholders, etc.)
+            renderedLines.push(renderTemplate(line, vars));
+        }
+
+        return renderedLines.join('\n');
+    };
+
     const resolvedSubject = renderTemplate(email_templates.subject, variables);
-    const resolvedBody = renderTemplate(email_templates.body, variables);
+    const resolvedBody = resolveBodyWithHiddenEmptyLines(email_templates.body, variables);
     const previewFirstLine = resolvedBody.split('\n').find((l) => l.trim().length > 0);
 
     const artistName = getVariable(variables, 'Your Name', 'Simple Tattooer');
