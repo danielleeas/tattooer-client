@@ -91,14 +91,14 @@ const tempVariables = {
     "Studio Name": "Simple Tattooer",
 } as const;
 
-const paymenLinks = {
-    "Credit Card": "https://simpletattooer.com/payment",
+const paymentLinks = {
+    "Credit Card": "1111-1111-1111-1111",
     "Paypal": "https://simpletattooer.com/payment",
 } as const;
 
 const defaultAvatarUrl = "https://lkzdwcjvzyrhsieijjdr.supabase.co/storage/v1/object/public/assets/icons/dummy_photo.png";
 
-const ManualBookingRequest = ({ variables = tempVariables, email_templates = emailTemplates, payment_links = paymenLinks, avatar_url = defaultAvatarUrl }: ManualBookingRequestProps) => {
+const ManualBookingRequest = ({ variables = tempVariables, email_templates = emailTemplates, payment_links = paymentLinks, avatar_url = defaultAvatarUrl }: ManualBookingRequestProps) => {
 
     const resolvedSubject = renderTemplate(email_templates.subject, variables);
     const resolvedBody = renderTemplate(email_templates.body, variables);
@@ -261,23 +261,33 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                             {payment_links &&
                                                 Object.entries(payment_links).map(([key, value]) => {
                                                     const isValueUrl = isUrl(value);
-                                                    // For non-URLs, create a link to a copy endpoint
-                                                    // The endpoint should copy the text to clipboard
-                                                    const href = isValueUrl 
-                                                        ? value 
-                                                        : joinUrl(baseUrl, 'api/copy') + `?text=${encodeURIComponent(value)}`;
                                                     
-                                                    return (
-                                                        <React.Fragment key={`pl-btn-${key}`}>
-                                                            <Button
-                                                                className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                                                style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
-                                                                href={href}
-                                                            >
-                                                                {key}
-                                                            </Button>
-                                                        </React.Fragment>
-                                                    );
+                                                    if (isValueUrl) {
+                                                        // For URLs, show a clickable button
+                                                        return (
+                                                            <React.Fragment key={`pl-btn-${key}`}>
+                                                                <Button
+                                                                    className="w-full text-[14px] font-normal no-underline text-center px-5"
+                                                                    style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                                                    href={value}
+                                                                >
+                                                                    {key}
+                                                                </Button>
+                                                            </React.Fragment>
+                                                        );
+                                                    } else {
+                                                        // For non-URLs, show the label and value as text for manual copying
+                                                        return (
+                                                            <React.Fragment key={`pl-text-${key} `}>
+                                                                <Button
+                                                                    className="w-full text-[14px] font-normal no-underline text-center px-5"
+                                                                    style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                                                >
+                                                                    {key}:  {value}
+                                                                </Button>
+                                                            </React.Fragment>
+                                                        );
+                                                    }
                                                 })}
                                         </React.Fragment>
                                     );
