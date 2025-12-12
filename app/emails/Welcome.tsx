@@ -92,11 +92,11 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                 height="160"
                                 className="mb-4"
                             />
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
-                            <Link href="https://drive.google.com/drive/folders/1NjBjLlfPaEQS1ZBKriYwuaU7k66UcA_6" style={{ color: '#058CFA!important' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
+                            <Link href="https://drive.google.com/drive/folders/1NjBjLlfPaEQS1ZBKriYwuaU7k66UcA_6" style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
                         </Section>
 
                         {/* Footer */}
