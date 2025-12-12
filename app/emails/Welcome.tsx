@@ -26,7 +26,7 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
     const previewText = "Welcome to Simple Tattooer! Your account is set up. To get started, just click below:";
 
     return (
-        <Html>
+        <Html style={{ colorScheme: 'light' }}>
             <Tailwind>
                 <Head>
                     <Font
@@ -39,7 +39,7 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                         fontWeight={400}
                         fontStyle="normal"
                     />
-                    {/* Email-safe responsive helpers */}
+                    {/* Email-safe responsive helpers and dark mode protection */}
                     <style>
                         {`
                         .desktop-hide { display: none !important; }
@@ -49,13 +49,25 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                             .mobile-hide { display: none !important; }
                             .mobile-mt-16 { margin-top: 16px !important; }
                         }
+                        /* Prevent iOS Mail app dark mode color inversion */
+                        @media (prefers-color-scheme: dark) {
+                            * {
+                                color: #FFFFFF !important;
+                            }
+                            [style*="background-color"] {
+                                background-color: #05080F !important;
+                            }
+                            [style*="color"] {
+                                color: inherit !important;
+                            }
+                        }
                         `}
                     </style>
                 </Head>
                 <Preview>{previewText}</Preview>
                 <Body className="mx-auto my-auto max-w-[600px]">
-                    <Container className="mx-auto max-w-[600px] py-[40px] px-4" style={{ backgroundColor: '#05080F!important' }}>
-                        <Section className="mx-auto max-w-[472px]" style={{ backgroundColor: '#05080F!important' }}>
+                    <Container className="mx-auto max-w-[600px] py-[40px] px-4" style={{ backgroundColor: '#05080F' }}>
+                        <Section className="mx-auto max-w-[472px]" style={{ backgroundColor: '#05080F' }}>
                             <Img
                                 src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/logo.png"
                                 alt="Simple Tattooer"
@@ -63,15 +75,15 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                 height="64"
                                 className="mb-[10px] mx-auto"
                             />
-                            <Heading style={{ color: '#FFFFFF!important' }} className="text-[18px] font-normal text-center p-0 mx-0 my-0 uppercase">simple</Heading>
-                            <Heading style={{ color: '#FFFFFF!important' }} className="text-[18px] font-normal text-center p-0 mx-0 my-0 uppercase">tattooer</Heading>
+                            <Heading style={{ color: '#FFFFFF' }} className="text-[18px] font-normal text-center p-0 mx-0 my-0 uppercase">simple</Heading>
+                            <Heading style={{ color: '#FFFFFF' }} className="text-[18px] font-normal text-center p-0 mx-0 my-0 uppercase">tattooer</Heading>
                         </Section>
-                        
-                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F!important' }}>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Hi {artistName}, weclome to Simple Tattooer!</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Your subscription is active, and your account is set up!</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-0">Your Personal Booking Link and matching QR code are below(this can be edited anytime in Your Settings in the app):</Text>
-                            <Text style={{ color: '#058CFA!important' }} className="text-[16px] leading-[20px] my-0 mb-1">{bookingLink}</Text>
+
+                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F' }}>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Hi {artistName}, weclome to Simple Tattooer!</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Your subscription is active, and your account is set up!</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-0">Your Personal Booking Link and matching QR code are below(this can be edited anytime in Your Settings in the app):</Text>
+                            <Text style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0 mb-1">{bookingLink}</Text>
                             <Img
                                 src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/Rectangle.png"
                                 alt="Simple Tattooer"
@@ -79,18 +91,18 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                 height="160"
                                 className="mb-4"
                             />
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
-                            <Link href="https://example.com" style={{ color: '#058CFA!important' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
+                            <Link href="https://example.com" style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
                         </Section>
 
                         {/* Footer */}
-                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F!important' }}>
+                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F' }}>
                             <Row>
                                 <Column className="mobile-block" style={{ verticalAlign: 'top' }}>
-                                    <Text style={{ color: '#FFFFFF!important' }} className="text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
+                                    <Text style={{ color: '#FFFFFF' }} className="text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
                                     <Row>
                                         <Column align='left'>
                                             <Link href="https://play.google.com/store">
@@ -116,7 +128,7 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                     </Row>
                                 </Column>
                                 <Column className="mobile-block mobile-mt-16" width="45px" style={{ verticalAlign: 'top' }}>
-                                    <Text style={{ color: '#FFFFFF!important' }} className="text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
+                                    <Text style={{ color: '#FFFFFF' }} className="text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
                                     <Link href="https://instagram.com" target="_blank">
                                         <Img
                                             src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/mdi_instagram.png"
@@ -128,7 +140,7 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                                 </Column>
                             </Row>
                             <Hr style={{ borderColor: '#1E293B' }} />
-                            <Text style={{ color: '#FFFFFF!important' }} className="text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
                         </Section>
                     </Container>
                 </Body>

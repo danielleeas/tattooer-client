@@ -134,7 +134,7 @@ const ClientNew = ({
     };
 
     return (
-        <Html>
+        <Html style={{ colorScheme: 'light' }}>
             <Tailwind>
                 <Head>
                     <Font
@@ -147,7 +147,7 @@ const ClientNew = ({
                         fontWeight={400}
                         fontStyle="normal"
                     />
-                    {/* Email-safe responsive helpers */}
+                    {/* Email-safe responsive helpers and dark mode protection */}
                     <style>
                         {`
                         .desktop-hide { display: none !important; }
@@ -156,6 +156,18 @@ const ClientNew = ({
                             .mobile-center { text-align: center !important; }
                             .mobile-hide { display: none !important; }
                             .mobile-mt-16 { margin-top: 16px !important; }
+                        }
+                        /* Prevent iOS Mail app dark mode color inversion */
+                        @media (prefers-color-scheme: dark) {
+                            * {
+                                color: #FFFFFF !important;
+                            }
+                            [style*="background-color"] {
+                                background-color: #05080F !important;
+                            }
+                            [style*="color"] {
+                                color: inherit !important;
+                            }
                         }
                         `}
                     </style>
