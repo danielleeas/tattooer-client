@@ -28,6 +28,8 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
 
     return (
         <Html style={{ colorScheme: 'light' }}>
+            <meta name="color-scheme" content="light dark" />
+            <meta name="supported-color-schemes" content="light dark" />
             <Tailwind>
                 <Head>
                     <Font
