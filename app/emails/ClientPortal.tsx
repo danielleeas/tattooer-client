@@ -35,7 +35,7 @@ const ClientPortalEmail = ({
     const previewText = "Your Client Portal is ready! To get started, just click below:";
 
     return (
-        <Html>
+        <Html style={{ colorScheme: 'light' }}>
             <Tailwind>
                 <Head>
                     <Font
@@ -48,7 +48,7 @@ const ClientPortalEmail = ({
                         fontWeight={400}
                         fontStyle="normal"
                     />
-                    {/* Email-safe responsive helpers */}
+                    {/* Email-safe responsive helpers and dark mode protection */}
                     <style>
                         {`
                         .desktop-hide { display: none !important; }
@@ -57,6 +57,18 @@ const ClientPortalEmail = ({
                             .mobile-center { text-align: center !important; }
                             .mobile-hide { display: none !important; }
                             .mobile-mt-16 { margin-top: 16px !important; }
+                        }
+                        /* Prevent iOS Mail app dark mode color inversion */
+                        @media (prefers-color-scheme: dark) {
+                            * {
+                                color: #FFFFFF !important;
+                            }
+                            [style*="background-color"] {
+                                background-color: #05080F !important;
+                            }
+                            [style*="color"] {
+                                color: inherit !important;
+                            }
                         }
                         `}
                     </style>
@@ -93,8 +105,8 @@ const ClientPortalEmail = ({
 
                         <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F' }}>
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Hi {clientName}.</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">I'm so excited to be working with you. As a perk of being my client, you now get access to your exclusive Client Portal — powered by Simple Tattooer.</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-6">Inside your personal dashboard, you'll find your appointment details, payment info and receipts, my aftercare + FAQ pages, a reschedule/cancel button if anything changes, and a direct message portal to reach me anytime.</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">I&apos;m so excited to be working with you. As a perk of being my client, you now get access to your exclusive Client Portal — powered by Simple Tattooer.</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-6">Inside your personal dashboard, you&apos;ll find your appointment details, payment info and receipts, my aftercare + FAQ pages, a reschedule/cancel button if anything changes, and a direct message portal to reach me anytime.</Text>
 
                             <Button
                                 className="w-full text-[14px] font-normal no-underline text-center px-5"
@@ -105,7 +117,7 @@ const ClientPortalEmail = ({
                             </Button>
 
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">This is your private space — built just for you.</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Can't wait to see you soon,</Text>
+                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Can&apos;t wait to see you soon,</Text>
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">{artistName}</Text>
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">{studioName}</Text>
                         </Section>
