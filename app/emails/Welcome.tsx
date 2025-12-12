@@ -20,9 +20,10 @@ import {
 interface WelcomeEmailProps {
     artistName: string;
     bookingLink: string;
+    qrCodeUrl: string;
 }
 
-const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simpletattooer.com/booking' }: WelcomeEmailProps) => {
+const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simpletattooer.com/booking', qrCodeUrl = 'https://simpletattooer.com/qr-code' }: WelcomeEmailProps) => {
     const previewText = "Welcome to Simple Tattooer! Your account is set up. To get started, just click below:";
 
     return (
@@ -85,17 +86,17 @@ const WelcomeEmail = ({ artistName = 'Dainel Lee', bookingLink = 'https://simple
                             <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-0">Your Personal Booking Link and matching QR code are below(this can be edited anytime in Your Settings in the app):</Text>
                             <Text style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0 mb-1">{bookingLink}</Text>
                             <Img
-                                src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/Rectangle.png"
-                                alt="Simple Tattooer"
+                                src={qrCodeUrl}
+                                alt="Qr Code"
                                 width="160"
                                 height="160"
                                 className="mb-4"
                             />
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
-                            <Link href="https://example.com" style={{ color: '#058CFA' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
-                            <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
+                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Share it on Instagram, your website, or anywhere else so clients can fill out your booking form, make a consultation appointment, and more.</Text>
+                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mb-4">Need help with the app? We&apos;ve made short walkthrough videos for every feature:</Text>
+                            <Link href="https://drive.google.com/drive/folders/1NjBjLlfPaEQS1ZBKriYwuaU7k66UcA_6" style={{ color: '#058CFA!important' }} className="text-[16px] leading-[20px] my-0">Watch the Demo Videos</Link>
+                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0 mt-4">Thanks for being here —</Text>
+                            <Text style={{ color: '#FFFFFF!important' }} className="text-[16px] leading-[20px] my-0">The Simple Tattooer Team</Text>
                         </Section>
 
                         {/* Footer */}

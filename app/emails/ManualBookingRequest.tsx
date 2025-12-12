@@ -32,13 +32,42 @@ type ManualBookingRequestProps = {
 };
 
 function isUrl(value: string): boolean {
-    try {
-        const url = new URL(value);
-        return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-        // If it starts with http:// or https://, treat it as URL even if URL parsing fails
-        return /^https?:\/\//i.test(value);
+    // Trim whitespace
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+
+    // Check if it has a protocol (http:// or https://)
+    if (/^https?:\/\//i.test(trimmed)) {
+        try {
+            const url = new URL(trimmed);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
+            return true; // If it starts with http:// or https://, treat as URL
+        }
     }
+
+    // Check if it looks like a domain name (without protocol)
+    // Must contain at least one dot and look like a valid domain
+    // Pattern: alphanumeric, hyphens, dots allowed; must have at least one dot; 
+    // must end with valid TLD (2+ chars after last dot); no spaces
+    const domainPattern = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+    
+    // Additional check: must not contain spaces, and should have at least one dot
+    if (trimmed.includes(' ') || !trimmed.includes('.')) {
+        return false;
+    }
+
+    // Check if it matches domain pattern
+    if (domainPattern.test(trimmed)) {
+        return true;
+    }
+
+    // Also check for common URL patterns like paypal.me (short domains)
+    // These might not have a dot but are still valid domains
+    // For now, we'll rely on the dot requirement, but we can add exceptions
+    // For very short domains like "paypal.me", the pattern above should catch them
+
+    return false;
 }
 
 const emailTemplates = {
@@ -195,7 +224,7 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                         alt={`${artistName}'s desktop`}
                                         width="100"
                                         height="100"
-                                        style={{ borderRadius: '50px' }}
+                                        style={{ borderRadius: '50px', objectFit: 'cover' }}
                                     />
                                 </Column>
                                 <Column className="mobile-block" style={{ verticalAlign: 'middle' }}>
@@ -208,7 +237,7 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                         alt={artistName}
                                         width="100"
                                         height="100"
-                                        style={{ borderRadius: '50px' }}
+                                        style={{ borderRadius: '50px', objectFit: 'cover' }}
                                     />
                                 </Column>
                             </Row>

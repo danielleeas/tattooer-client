@@ -84,7 +84,7 @@ const ClientPortalEmail = ({
                                         alt={artistName}
                                         width="100"
                                         height="100"
-                                        style={{ borderRadius: '50px' }}
+                                        style={{ borderRadius: '50px', objectFit: 'cover' }}
                                     />
                                 </Column>
                                 <Column className="mobile-block" style={{ verticalAlign: 'middle' }}>
@@ -97,7 +97,7 @@ const ClientPortalEmail = ({
                                         alt={artistName}
                                         width="100"
                                         height="100"
-                                        style={{ borderRadius: '50px' }}
+                                        style={{ borderRadius: '50px', objectFit: 'cover' }}
                                     />
                                 </Column>
                             </Row>

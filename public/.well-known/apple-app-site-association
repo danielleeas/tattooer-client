@@ -1,4 +1,7 @@
 {
+  "webcredentials": {
+    "apps": [ "CGVZH5BVPC.com.darkocean.simpletattooer" ]
+  },
   "applinks": {
     "details": [
       { "appID": "CGVZH5BVPC.com.darkocean.simpletattooer", "paths": ["/client-portal/*", "/client-portal"] }
