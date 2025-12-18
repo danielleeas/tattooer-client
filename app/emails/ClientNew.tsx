@@ -90,10 +90,10 @@ const ClientNew = ({
     const segments = parseBodySegments(resolvedBody);
 
     // Get the date/time/location value(s) to detect them in lines
-    const dateTimeLocationVar = variables['Date, Time, location'] || 
+    const dateTimeLocationVar = variables['Date, Time, location'] ||
         Object.entries(variables).find(([k]) => normalizeKey(k) === normalizeKey('Date, Time, location'))?.[1];
-    const dateTimeLocationValues = Array.isArray(dateTimeLocationVar) 
-        ? dateTimeLocationVar 
+    const dateTimeLocationValues = Array.isArray(dateTimeLocationVar)
+        ? dateTimeLocationVar
         : dateTimeLocationVar ? [dateTimeLocationVar] : [];
 
     const renderTextWithBreaks = (text: string) => {
@@ -137,6 +137,8 @@ const ClientNew = ({
         <Html style={{ colorScheme: 'light' }}>
             <Tailwind>
                 <Head>
+                    <meta name="color-scheme" content="light dark" />
+                    <meta name="supported-color-schemes" content="light dark" />
                     <Font
                         fontFamily="Arial"
                         fallbackFontFamily="Arial"
@@ -150,25 +152,20 @@ const ClientNew = ({
                     {/* Email-safe responsive helpers and dark mode protection */}
                     <style>
                         {`
-                        .desktop-hide { display: none !important; }
-                        @media only screen and (max-width: 480px) {
-                            .mobile-block { display: block !important; width: 100% !important; }
-                            .mobile-center { text-align: center !important; }
-                            .mobile-hide { display: none !important; }
-                            .mobile-mt-16 { margin-top: 16px !important; }
-                        }
-                        /* Prevent iOS Mail app dark mode color inversion */
-                        @media (prefers-color-scheme: dark) {
-                            * {
-                                color: #FFFFFF !important;
+                            .desktop-hide { display: none !important; }
+                            @media only screen and (max-width: 480px) {
+                                .mobile-block { display: block !important; width: 100% !important; }
+                                .mobile-center { text-align: center !important; }
+                                .mobile-hide { display: none !important; }
+                                .mobile-mt-16 { margin-top: 16px !important; }
                             }
-                            [style*="background-color"] {
-                                background-color: #05080F !important;
+                            /* Prevent iOS Mail app dark mode color inversion */
+                            @media (prefers-color-scheme: dark) {
+                                body, table, td {
+                                    color: #F0F0F0 !important;
+                                    background-color: #05080F !important;
+                                }
                             }
-                            [style*="color"] {
-                                color: inherit !important;
-                            }
-                        }
                         `}
                     </style>
                 </Head>
@@ -188,8 +185,8 @@ const ClientNew = ({
                                     />
                                 </Column>
                                 <Column className="mobile-block" style={{ verticalAlign: 'middle' }}>
-                                    <Heading style={{ color: '#FFFFFF' }} className="text-[24px] font-normal p-0 m-0 text-left mobile-center">{resolvedSubject}</Heading>
-                                    <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
+                                    <Heading style={{ color: '#F0F0F0' }} className="text-[24px] font-normal p-0 m-0 text-left mobile-center">{resolvedSubject}</Heading>
+                                    <Text style={{ color: '#F0F0F0' }} className="text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
                                 </Column>
                                 <Column className="mobile-hide" align="right" style={{ verticalAlign: 'middle' }}>
                                     <Img
@@ -210,7 +207,7 @@ const ClientNew = ({
                                     const content = seg.content;
                                     if (!content) return null;
                                     return (
-                                        <Text key={`t-${idx}`} style={{ color: '#FFFFFF' }} className="text-[16px] leading-[22px] my-0">
+                                        <Text key={`t-${idx}`} style={{ color: '#F0F0F0' }} className="text-[16px] leading-[22px] my-0">
                                             {renderTextWithBreaks(content)}
                                         </Text>
                                     );
@@ -221,7 +218,7 @@ const ClientNew = ({
                                         key={`b-${idx}`}
                                         className="w-full text-[14px] font-normal no-underline text-center px-5"
                                         href={href}
-                                        style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                        style={{ color: '#F0F0F0', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
                                     >
                                         {seg.label}
                                     </Button>
@@ -230,10 +227,10 @@ const ClientNew = ({
                         </Section>
 
                         {/* Footer */}
-                        <Section className='mt-[28px] mx-auto max-w-[472px] bg-[#05080F]'>
+                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F !important' }}>
                             <Row>
                                 <Column className="mobile-block" style={{ verticalAlign: 'top' }}>
-                                    <Text className="text-white text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
+                                    <Text style={{ color: '#F0F0F0 !important' }} className="text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
                                     <Row>
                                         <Column align='left'>
                                             <Link href="https://play.google.com/store">
@@ -259,7 +256,7 @@ const ClientNew = ({
                                     </Row>
                                 </Column>
                                 <Column className="mobile-block mobile-mt-16" width="45px" style={{ verticalAlign: 'top' }}>
-                                    <Text className="text-white text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
+                                    <Text style={{ color: '#F0F0F0 !important' }} className="text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
                                     <Link href="https://instagram.com" target="_blank">
                                         <Img
                                             src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/mdi_instagram.png"
@@ -270,8 +267,8 @@ const ClientNew = ({
                                     </Link>
                                 </Column>
                             </Row>
-                            <Hr style={{ borderColor: '#1E293B' }} />
-                            <Text className="text-white text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
+                            <Hr style={{ borderColor: '#1E293B !important' }} />
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
                         </Section>
                     </Container>
                 </Body>

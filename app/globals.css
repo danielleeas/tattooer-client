@@ -82,11 +82,11 @@
 .dark {
   --background: #05080f;
   --background-secondary: #14171f;
-  --foreground: #ffffff;
+  --foreground: #F0F0F0;
   --card: #05080f;
-  --card-foreground: #ffffff;
+  --card-foreground: #F0F0F0;
   --popover: #05080f;
-  --popover-foreground: #ffffff;
+  --popover-foreground: #F0F0F0;
   --primary: #fafafa;
   --primary-foreground: #171717;
   --secondary: #14171f;

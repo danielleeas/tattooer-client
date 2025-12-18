@@ -31,6 +31,38 @@ type ManualBookingRequestProps = {
     payment_links?: Record<string, string>;
 };
 
+function isZeroDeposit(value: string | undefined): boolean {
+    if (!value) return true;
+    const trimmed = value.trim();
+    if (!trimmed) return true;
+    // Check for "0", "$0", "$0.00", "0.00", etc.
+    const numericValue = trimmed.replace(/[$,]/g, '');
+    const parsed = parseFloat(numericValue);
+    return !isNaN(parsed) && parsed === 0;
+}
+
+function getPaymentInstruction(method: string, value: string): string {
+    const lowerMethod = method.toLowerCase();
+    
+    if (lowerMethod.includes('e-transfer') || lowerMethod.includes('etransfer') || lowerMethod.includes('interac')) {
+        return `For e-transfer, copy ${value} and paste it into your banking app.`;
+    }
+    if (lowerMethod.includes('paypal')) {
+        return `For PayPal, copy ${value} and paste it into your PayPal app.`;
+    }
+    if (lowerMethod.includes('venmo')) {
+        return `For Venmo, copy ${value} and paste it into your Venmo app.`;
+    }
+    if (lowerMethod.includes('zelle')) {
+        return `For Zelle, copy ${value} and paste it into your banking app.`;
+    }
+    if (lowerMethod.includes('cash app') || lowerMethod.includes('cashapp')) {
+        return `For Cash App, copy ${value} and paste it into your Cash App.`;
+    }
+    // Generic fallback
+    return `For ${method}, copy ${value} and use it in your payment app.`;
+}
+
 function isUrl(value: string): boolean {
     // Trim whitespace
     const trimmed = value.trim();
@@ -51,7 +83,7 @@ function isUrl(value: string): boolean {
     // Pattern: alphanumeric, hyphens, dots allowed; must have at least one dot; 
     // must end with valid TLD (2+ chars after last dot); no spaces
     const domainPattern = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
-    
+
     // Additional check: must not contain spaces, and should have at least one dot
     if (trimmed.includes(' ') || !trimmed.includes('.')) {
         return false;
@@ -110,6 +142,10 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
         const placeholderRegex = /\[([^\]]+)\]/g;
         const lines = template.split('\n');
         const renderedLines: string[] = [];
+        
+        // Check if deposit is 0 to hide deposit-related content
+        const depositVal = getVariable(vars, 'auto-fill-deposit-required', '');
+        const depositIsZero = isZeroDeposit(depositVal);
 
         for (const line of lines) {
             let match: RegExpExecArray | null;
@@ -126,6 +162,16 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                     shouldHide = true;
                     break;
                 }
+                // Hide lines with deposit-related placeholders when deposit is 0
+                if (key === 'auto-fill-deposit-required' && isZeroDeposit(value)) {
+                    shouldHide = true;
+                    break;
+                }
+            }
+            
+            // Hide deposit-related static text lines when deposit is 0
+            if (depositIsZero && /pay.*deposit|deposit.*pay/i.test(line)) {
+                shouldHide = true;
             }
 
             if (shouldHide) continue;
@@ -144,6 +190,10 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
     const artistName = getVariable(variables, 'Your Name', 'Simple Tattooer');
     const previewText = previewFirstLine ?? "Thanks for sending your idea my way!";
     const baseUrl = getBaseUrl();
+    
+    // Check if deposit is required (not zero) to determine if payment links should be shown
+    const depositValue = getVariable(variables, 'auto-fill-deposit-required', '');
+    const showPaymentLinks = !isZeroDeposit(depositValue);
 
     type Segment =
         | { type: 'text'; content: string }
@@ -214,6 +264,8 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
         <Html style={{ colorScheme: 'light' }}>
             <Tailwind>
                 <Head>
+                    <meta name="color-scheme" content="light dark" />
+                    <meta name="supported-color-schemes" content="light dark" />
                     <Font
                         fontFamily="Arial"
                         fallbackFontFamily="Arial"
@@ -227,25 +279,20 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                     {/* Email-safe responsive helpers and dark mode protection */}
                     <style>
                         {`
-                        .desktop-hide { display: none !important; }
-                        @media only screen and (max-width: 480px) {
-                            .mobile-block { display: block !important; width: 100% !important; }
-                            .mobile-center { text-align: center !important; }
-                            .mobile-hide { display: none !important; }
-                            .mobile-mt-16 { margin-top: 16px !important; }
-                        }
-                        /* Prevent iOS Mail app dark mode color inversion */
-                        @media (prefers-color-scheme: dark) {
-                            * {
-                                color: #FFFFFF !important;
+                            .desktop-hide { display: none !important; }
+                            @media only screen and (max-width: 480px) {
+                                .mobile-block { display: block !important; width: 100% !important; }
+                                .mobile-center { text-align: center !important; }
+                                .mobile-hide { display: none !important; }
+                                .mobile-mt-16 { margin-top: 16px !important; }
                             }
-                            [style*="background-color"] {
-                                background-color: #05080F !important;
+                            /* Prevent iOS Mail app dark mode color inversion */
+                            @media (prefers-color-scheme: dark) {
+                                body, table, td {
+                                    color: #F0F0F0 !important;
+                                    background-color: #05080F !important;
+                                }
                             }
-                            [style*="color"] {
-                                color: inherit !important;
-                            }
-                        }
                         `}
                     </style>
                 </Head>
@@ -265,8 +312,8 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                     />
                                 </Column>
                                 <Column className="mobile-block" style={{ verticalAlign: 'middle' }}>
-                                    <Heading style={{ color: '#FFFFFF' }} className="text-[24px] font-normal p-0 m-0 text-left mobile-center">{resolvedSubject}</Heading>
-                                    <Text style={{ color: '#FFFFFF' }} className="text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
+                                    <Heading style={{ color: '#F0F0F0' }} className="text-[24px] font-normal p-0 m-0 text-left mobile-center">{resolvedSubject}</Heading>
+                                    <Text style={{ color: '#F0F0F0' }} className="text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
                                 </Column>
                                 <Column className="mobile-hide" align="right" style={{ verticalAlign: 'middle' }}>
                                     <Img
@@ -287,25 +334,27 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                     const content = seg.content;
                                     if (!content) return null;
                                     return (
-                                        <Text key={`t-${idx}`} className="text-white text-[16px] leading-[22px] my-0">
+                                        <Text style={{ color: '#F0F0F0' }} key={`t-${idx}`} className="text-white text-[16px] leading-[22px] my-0">
                                             {renderTextWithBreaks(content)}
                                         </Text>
                                     );
                                 }
                                 if (seg.type === 'payment_link') {
+                                    // Don't show payment links if deposit is 0
+                                    if (!showPaymentLinks) return null;
                                     return (
                                         <React.Fragment key={`pl-${idx}`}>
                                             {payment_links &&
                                                 Object.entries(payment_links).map(([key, value]) => {
                                                     const isValueUrl = isUrl(value);
-                                                    
+
                                                     if (isValueUrl) {
                                                         // For URLs, show a clickable button
                                                         return (
                                                             <React.Fragment key={`pl-btn-${key}`}>
                                                                 <Button
                                                                     className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                                                    style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                                                    style={{ color: '#F0F0F0', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
                                                                     href={value}
                                                                 >
                                                                     {key}
@@ -313,16 +362,15 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                                             </React.Fragment>
                                                         );
                                                     } else {
-                                                        // For non-URLs, show the label and value as text for manual copying
+                                                        // For non-URLs, show instructional text for manual copying
                                                         return (
-                                                            <React.Fragment key={`pl-text-${key} `}>
-                                                                <Button
-                                                                    className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                                                    style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
-                                                                >
-                                                                    {key}:  {value}
-                                                                </Button>
-                                                            </React.Fragment>
+                                                            <Text
+                                                                key={`pl-text-${key}`}
+                                                                style={{ color: '#F0F0F0' }}
+                                                                className="text-[16px] leading-[22px] my-0 mb-4"
+                                                            >
+                                                                {getPaymentInstruction(key, value)}
+                                                            </Text>
                                                         );
                                                     }
                                                 })}
@@ -330,19 +378,22 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                     );
                                 }
                                 if (seg.type === 'button') {
+                                    // Don't show payment buttons if deposit is 0
+                                    if (!showPaymentLinks) return null;
+                                    
                                     const hrefValue = resolveButtonHref(seg.label);
                                     // If hrefValue is '#', use it directly; otherwise check if it's a URL
-                                    const href = hrefValue === '#' 
+                                    const href = hrefValue === '#'
                                         ? hrefValue
-                                        : (isUrl(hrefValue) 
-                                            ? hrefValue 
+                                        : (isUrl(hrefValue)
+                                            ? hrefValue
                                             : joinUrl(baseUrl, 'api/copy') + `?text=${encodeURIComponent(hrefValue)}`);
-                                    
+
                                     return (
                                         <Button
                                             key={`b-${idx}`}
                                             className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                            style={{ color: '#FFFFFF', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
+                                            style={{ color: '#F0F0F0', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
                                             href={href}
                                         >
                                             {seg.label}
@@ -354,10 +405,10 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                         </Section>
 
                         {/* Footer */}
-                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F' }}>
+                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F !important' }}>
                             <Row>
                                 <Column className="mobile-block" style={{ verticalAlign: 'top' }}>
-                                    <Text style={{ color: '#FFFFFF' }} className="text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
+                                    <Text style={{ color: '#F0F0F0 !important' }} className="text-[10px] leading-[14px] my-0 mb-2">Download Our App</Text>
                                     <Row>
                                         <Column align='left'>
                                             <Link href="https://play.google.com/store">
@@ -383,7 +434,7 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                     </Row>
                                 </Column>
                                 <Column className="mobile-block mobile-mt-16" width="45px" style={{ verticalAlign: 'top' }}>
-                                    <Text style={{ color: '#FFFFFF' }} className="text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
+                                    <Text style={{ color: '#F0F0F0 !important' }} className="text-[10px] leading-[14px] my-0 mb-2">Follow Us</Text>
                                     <Link href="https://instagram.com" target="_blank">
                                         <Img
                                             src="https://rrjceacgpemebgmooeny.supabase.co/storage/v1/object/public/assets/icons/mdi_instagram.png"
@@ -394,8 +445,8 @@ const ManualBookingRequest = ({ variables = tempVariables, email_templates = ema
                                     </Link>
                                 </Column>
                             </Row>
-                            <Hr style={{ borderColor: '#1E293B' }} />
-                            <Text style={{ color: '#FFFFFF' }} className="text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
+                            <Hr style={{ borderColor: '#1E293B !important' }} />
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[12px] leading-[16px] my-0 mt-3">© 2025 Simple Tattooer. All Rights Reserved</Text>
                         </Section>
                     </Container>
                 </Body>

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
             min-height: 100vh;
             margin: 0;
             background-color: #05080F;
-            color: #FFFFFF;
+            color: #F0F0F0;
         }
         .container {
             text-align: center;
