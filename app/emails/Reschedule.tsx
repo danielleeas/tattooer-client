@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
     Body,
     Button,
@@ -17,113 +16,24 @@ import {
     Tailwind,
     Text,
 } from '@react-email/components';
-import { getBaseUrl, joinUrl } from '@/lib/utils';
-import { getVariable, renderTemplate } from '@/lib/utils/emails';
-import { defaultEamilTemplateData, DefaultTemplateDataItem } from '@/lib/email-templates/default-templates';
 
-function isUrl(value: string): boolean {
-    try {
-        const url = new URL(value);
-        return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-        // If it starts with http:// or https://, treat it as URL even if URL parsing fails
-        return /^https?:\/\//i.test(value);
-    }
+interface ArtistRescheduleProps {
+    artistName: string;
+    clientName: string;
+    reason: string;
+    originalDate: string;
+    originalTime: string;
+    bookingLink: string;
+    studioName: string;
+    avatar_url: string;
 }
 
-const emailTemplates = defaultEamilTemplateData.newBookingRequestReceived;
-const defaultAvatarUrl = "https://lkzdwcjvzyrhsieijjdr.supabase.co/storage/v1/object/public/assets/icons/dummy_photo.png";
+const ArtistReschedule = ({ artistName, clientName, reason, originalDate, originalTime, bookingLink, studioName, avatar_url }: ArtistRescheduleProps) => {
 
-const tempVariables = {
-    "Client First Name": "Sam",
-    "Your Name": "Andrew Thomson",
-    "Studio Name": "Simple Tattooer",
-} as const;
-
-type BookingRequestProps = {
-    variables?: Record<string, string | readonly string[]>;
-    email_templates?: DefaultTemplateDataItem;
-    avatar_url?: string;
-};
-
-const BookingRequest = ({
-    variables = tempVariables,
-    email_templates = emailTemplates,
-    avatar_url = defaultAvatarUrl
-}: BookingRequestProps) => {
-    const resolvedBody = renderTemplate(email_templates.Body, variables);
-    const previewFirstLine = resolvedBody.split('\n').find((l) => l.trim().length > 0);
-    const previewText = previewFirstLine ?? "Thanks for sending your idea my way!";
-
-    type Segment =
-        | { type: 'text'; content: string }
-        | { type: 'button'; label: string }
-        | { type: 'payment_link' };
-
-    const parseBodySegments = (text: string): Segment[] => {
-        const segments: Segment[] = [];
-        // Matches: (Button- Label) or (Buttons- label1|label2|...) or (insert clickable payment links here)
-        const regex = /\((Button|Buttons)-\s*([^)]+)\)|\((?:insert clickable payment links here)\)/gi;
-        let lastIndex = 0;
-        let match: RegExpExecArray | null;
-        while ((match = regex.exec(text)) !== null) {
-            const idx = match.index;
-            if (idx > lastIndex) {
-                segments.push({ type: 'text', content: text.slice(lastIndex, idx) });
-            }
-            const kind = match[1];
-            const payload = match[2];
-            if (!kind) {
-                // insert clickable payment links here
-                segments.push({ type: 'payment_link' });
-            } else if (/^Button$/i.test(kind)) {
-                const label = (payload || '').trim();
-                segments.push({ type: 'button', label });
-            } else if (/^Buttons$/i.test(kind)) {
-                const labels = (payload || '').split(/[|,]/).map((l) => l.trim()).filter(Boolean);
-                if (labels.length === 0) {
-                    segments.push({ type: 'payment_link' });
-                } else {
-                    for (const lbl of labels) {
-                        segments.push({ type: 'button', label: lbl });
-                    }
-                }
-            }
-            lastIndex = regex.lastIndex;
-        }
-        if (lastIndex < text.length) {
-            segments.push({ type: 'text', content: text.slice(lastIndex) });
-        }
-        return segments;
-    };
-
-    const renderTextWithBreaks = (text: string) => {
-        const parts: React.ReactNode[] = [];
-        // Remove leading newlines
-        const trimmedText = text.replace(/^\n+/, '');
-        const lines = trimmedText.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (line.length > 0) parts.push(line);
-            if (i < lines.length - 1) parts.push(<br key={`br-${i}-${line.length}`} />);
-        }
-        return parts;
-    };
-
-    const resolveButtonHref = (label: string): string => {
-        // Prefer variable value with label name, fallback to payment_links[label]
-        const fromVar = getVariable(variables, label, '');
-        if (fromVar) return fromVar;
-        return '#';
-    };
-
-    const segments = parseBodySegments(resolvedBody);
-    const baseUrl = getBaseUrl();
-
-    const artistName = getVariable(variables, 'Your Name', 'Simple Tattooer');
+    const previewText = "Thanks for sending your idea my way!";
 
     return (
-        <Html style={{ colorScheme: 'light' }}>
+        <Html>
             <Tailwind>
                 <Head>
                     <meta name="color-scheme" content="light dark" />
@@ -162,20 +72,20 @@ const BookingRequest = ({
                 <Body className="mx-auto my-auto max-w-[600px]">
                     <Container className="mx-auto max-w-[600px] py-[40px] px-4" style={{ backgroundColor: '#05080F' }}>
                         {/* Header with title and avatar */}
-                        <Section className="mx-auto max-w-[472px]" style={{ backgroundColor: '#05080F' }}>
+                        <Section className="mx-auto max-w-[472px]">
                             <Row>
                                 <Column className="mobile-block desktop-hide mb-5" align="center">
                                     <Img
                                         src={avatar_url}
-                                        alt="Artist"
+                                        alt={artistName}
                                         width="100"
                                         height="100"
                                         style={{ borderRadius: '50px', objectFit: 'cover' }}
                                     />
                                 </Column>
                                 <Column className="mobile-block" style={{ verticalAlign: 'middle' }}>
-                                    <Heading style={{ color: '#F0F0F0' }} className="text-white text-[24px] font-normal p-0 m-0 text-left mobile-center">{renderTemplate(email_templates.Subject, variables)}</Heading>
-                                    <Text style={{ color: '#F0F0F0' }} className="text-white text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
+                                    <Heading style={{ color: '#F0F0F0 !important' }} className="text-[24px] font-normal p-0 m-0 text-left mobile-center">Need to reschedule our appointment</Heading>
+                                    <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[20px] my-0 mt-2 mobile-center">with {artistName}</Text>
                                 </Column>
                                 <Column className="mobile-hide" align="right" style={{ verticalAlign: 'middle' }}>
                                     <Img
@@ -190,40 +100,14 @@ const BookingRequest = ({
                         </Section>
 
                         {/* Body copy */}
-                        <Section className='mt-[28px] mx-auto max-w-[472px]' style={{ backgroundColor: '#05080F' }}>
-                            {segments.map((seg, idx) => {
-                                if (seg.type === 'text') {
-                                    const content = seg.content;
-                                    if (!content) return null;
-                                    return (
-                                        <Text key={`t-${idx}`} style={{color: '#F0F0F0 !important'}} className="text-[16px] leading-[22px] my-0">
-                                            {renderTextWithBreaks(content)}
-                                        </Text>
-                                    );
-                                }
-
-                                if (seg.type === 'button') {
-                                    const hrefValue = resolveButtonHref(seg.label);
-                                    // If hrefValue is '#', use it directly; otherwise check if it's a URL
-                                    const href = hrefValue === '#'
-                                        ? hrefValue
-                                        : (isUrl(hrefValue)
-                                            ? hrefValue
-                                            : joinUrl(baseUrl, 'api/copy') + `?text=${encodeURIComponent(hrefValue)}`);
-
-                                    return (
-                                        <Button
-                                            key={`b-${idx}`}
-                                            className="w-full text-[14px] font-normal no-underline text-center px-5"
-                                            style={{ color: '#F0F0F0', height: '40px', lineHeight: '38px', display: 'block', maxWidth: '100%', boxSizing: 'border-box', borderRadius: '20px', border: '1px solid #94A3B8', marginBottom: '25px' }}
-                                            href={href}
-                                        >
-                                            {seg.label}
-                                        </Button>
-                                    );
-                                }
-
-                            })}
+                        <Section className='mt-[28px] mx-auto max-w-[472px]'>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0 mb-4">Hi {clientName},</Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0 mb-4">I'm sorry, but I need to move our appointment on {originalDate} at {originalTime}.</Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0 mb-4">Reason: {reason}</Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0 mb-4">I've opened up my next available dates for you <Link href={bookingLink}>here</Link></Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0 mb-4">Please choose a new day that works for you, and see you soon.Thank you for understanding,</Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0">{artistName}</Text>
+                            <Text style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0">{studioName}</Text>
                         </Section>
 
                         {/* Footer */}
@@ -277,4 +161,4 @@ const BookingRequest = ({
     )
 }
 
-export default BookingRequest;
+export default ArtistReschedule;

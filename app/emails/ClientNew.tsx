@@ -207,7 +207,7 @@ const ClientNew = ({
                                     const content = seg.content;
                                     if (!content) return null;
                                     return (
-                                        <Text key={`t-${idx}`} style={{ color: '#F0F0F0' }} className="text-[16px] leading-[22px] my-0">
+                                        <Text key={`t-${idx}`} style={{ color: '#F0F0F0 !important' }} className="text-[16px] leading-[22px] my-0">
                                             {renderTextWithBreaks(content)}
                                         </Text>
                                     );
